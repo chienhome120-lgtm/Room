@@ -797,6 +797,381 @@
     transition:opacity .12s ease;
   }
 
+
+/* v24 premium photorealistic skin */
+:root{
+  --p-text:#3e3833;--p-muted:#776e66;--p-line:rgba(83,67,54,.16);
+  --p-shadow:0 12px 28px rgba(56,44,36,.16);
+}
+html,body{
+  background:
+    radial-gradient(circle at 20% 0%,rgba(255,255,255,.95),transparent 36%),
+    linear-gradient(145deg,#eee9e3,#d8cfc6 70%,#cfc4b9);
+  color:var(--p-text);
+}
+header,.topbar{
+  background:linear-gradient(180deg,rgba(250,248,245,.98),rgba(230,224,217,.96))!important;
+  border-bottom:1px solid var(--p-line)!important;
+  box-shadow:0 5px 18px rgba(63,50,40,.10)!important;
+}
+.sidebar,.panel,.roomtype-panel,.door-panel{
+  background:linear-gradient(155deg,rgba(250,248,245,.98),rgba(225,217,208,.97))!important;
+  border:1px solid var(--p-line)!important;
+  box-shadow:var(--p-shadow)!important;
+}
+.card,.preset,.item,.roomtype-card{
+  background:linear-gradient(145deg,#fffdf9,#e1d9d0)!important;
+  border:1px solid rgba(85,69,56,.18)!important;
+  box-shadow:0 6px 14px rgba(61,49,40,.12),inset 0 1px 0 rgba(255,255,255,.95)!important;
+}
+.btn,button{
+  background:linear-gradient(180deg,#fffdf9 0%,#e4ddd5 50%,#d1c7bd 100%)!important;
+  color:#4a423b!important;
+  border:1px solid rgba(82,66,54,.22)!important;
+  box-shadow:0 4px 8px rgba(59,47,38,.15),inset 0 1px 0 rgba(255,255,255,.95)!important;
+  text-shadow:0 1px 0 rgba(255,255,255,.8);
+}
+.btn.active,#btn2d.active,#btn3d.active{
+  background:linear-gradient(180deg,#8d7b6d,#65564d)!important;
+  color:#fff!important;
+  text-shadow:0 1px 1px rgba(0,0,0,.24);
+}
+input,select{
+  background:linear-gradient(180deg,#fffefb,#eee7df)!important;
+  border:1px solid rgba(88,71,58,.20)!important;
+  box-shadow:inset 0 2px 5px rgba(66,52,42,.07)!important;
+}
+.workspace,.canvas-wrap{
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,255,255,.88),rgba(222,215,207,.82) 58%,rgba(201,191,181,.88))!important;
+}
+#planView{
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.45),rgba(213,203,194,.12)),
+    repeating-linear-gradient(0deg,rgba(80,65,54,.026) 0 1px,transparent 1px 24px),
+    repeating-linear-gradient(90deg,rgba(80,65,54,.026) 0 1px,transparent 1px 24px)!important;
+}
+.room-floor{
+  fill:url(#floorWoodGradient)!important;
+  stroke:#675b52!important;
+  stroke-width:3!important;
+  filter:url(#roomShadow)!important;
+}
+.furniture{
+  stroke:rgba(55,45,38,.52)!important;
+  stroke-width:2!important;
+  filter:url(#furnitureShadow)!important;
+}
+.furniture.selected{
+  stroke:#6f5b4c!important;
+  stroke-width:4!important;
+  filter:url(#selectedFurnitureShadow)!important;
+}
+.label{
+  fill:#2f2925!important;
+  font-weight:800!important;
+  paint-order:stroke;
+  stroke:rgba(255,255,255,.75);
+  stroke-width:4px;
+}
+.measure{
+  fill:#5f574f!important;
+  font-weight:700!important;
+  paint-order:stroke;
+  stroke:rgba(255,255,255,.8);
+  stroke-width:3px;
+}
+#view3d{
+  background:radial-gradient(circle at 50% 0%,#faf8f4,#dad2ca 58%,#bdb1a6)!important;
+}
+.floating-tools{
+  background:linear-gradient(155deg,rgba(249,247,243,.98),rgba(219,211,202,.96))!important;
+  box-shadow:0 10px 22px rgba(58,46,38,.18)!important;
+}
+@media (hover:hover){
+  .btn:hover,button:hover,.preset:hover,.item:hover,.roomtype-card:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.02);
+  }
+}
+
+
+/* v25：指定欄位字級統一為「儲存配置／載入配置／列印 PDF」大小 */
+:root{
+  --main-control-font-size:13px;
+}
+
+/* 三個基準按鈕本身也統一，避免手機版列印按鈕被縮成 12px */
+#saveBtn,
+#loadBtn,
+#printBtn{
+  font-size:var(--main-control-font-size) !important;
+}
+
+/* 快速新增家具：單人床、雙人床、沙發、餐桌、書桌、衣櫃、櫃子 */
+.preset-grid .preset{
+  font-size:var(--main-control-font-size) !important;
+}
+
+/* 房間寬、房間深、牆高，以及右側 cm */
+.topbar > .pill:nth-of-type(1) label,
+.topbar > .pill:nth-of-type(2) label,
+.topbar > .pill:nth-of-type(3) label,
+.topbar > .pill:nth-of-type(1) span,
+.topbar > .pill:nth-of-type(2) span,
+.topbar > .pill:nth-of-type(3) span{
+  font-size:var(--main-control-font-size) !important;
+}
+
+@media(max-width:420px){
+  #saveBtn,
+  #loadBtn,
+  #printBtn,
+  .preset-grid .preset,
+  .topbar > .pill:nth-of-type(1) label,
+  .topbar > .pill:nth-of-type(2) label,
+  .topbar > .pill:nth-of-type(3) label,
+  .topbar > .pill:nth-of-type(1) span,
+  .topbar > .pill:nth-of-type(2) span,
+  .topbar > .pill:nth-of-type(3) span{
+    font-size:var(--main-control-font-size) !important;
+  }
+}
+
+
+/* v26：強制放大「快速新增家具」文字，手機與桌機皆生效 */
+#sidebar .preset-grid > button.preset,
+#sidebar .preset-grid > .preset{
+  font-size:16px !important;
+  font-weight:700 !important;
+  line-height:1.25 !important;
+  min-height:50px !important;
+  padding:10px 6px !important;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+#sidebar .preset-grid > button.preset .sound-dot{
+  font-size:inherit !important;
+}
+@media(max-width:800px){
+  #sidebar .preset-grid > button.preset,
+  #sidebar .preset-grid > .preset{
+    font-size:16px !important;
+    font-weight:700 !important;
+  }
+}
+@media(max-width:420px){
+  #sidebar .preset-grid > button.preset,
+  #sidebar .preset-grid > .preset{
+    font-size:16px !important;
+    font-weight:700 !important;
+  }
+}
+
+
+/* v27：牆高放大；主功能按鈕字級與「複製／置中」一致 */
+
+/* 牆高特別放大 */
+.topbar > .pill:nth-of-type(3) label{
+  font-size:16px !important;
+  font-weight:700 !important;
+}
+
+/* 複製／置中的實際按鈕基準為一般 .btn 字級，統一指定 13px */
+#panelBtn,
+#applyRoom,
+#roomTypeBtn,
+#doorBtn,
+#btn2d,
+#btn3d,
+#saveBtn,
+#loadBtn,
+#printBtn,
+#duplicate,
+#centerObj{
+  font-size:13px !important;
+  line-height:1.2 !important;
+}
+
+/* 手機版仍保持相同字級，不再被其他 media rule 改小 */
+@media(max-width:800px){
+  #panelBtn,
+  #applyRoom,
+  #roomTypeBtn,
+  #doorBtn,
+  #btn2d,
+  #btn3d,
+  #saveBtn,
+  #loadBtn,
+  #printBtn,
+  #duplicate,
+  #centerObj{
+    font-size:13px !important;
+  }
+  .topbar > .pill:nth-of-type(3) label{
+    font-size:16px !important;
+  }
+}
+@media(max-width:420px){
+  #panelBtn,
+  #applyRoom,
+  #roomTypeBtn,
+  #doorBtn,
+  #btn2d,
+  #btn3d,
+  #saveBtn,
+  #loadBtn,
+  #printBtn,
+  #duplicate,
+  #centerObj{
+    font-size:13px !important;
+  }
+  .topbar > .pill:nth-of-type(3) label{
+    font-size:16px !important;
+  }
+}
+
+
+/* v28：放手自動避讓後維持清楚顯示 */
+.furniture{transition:opacity .12s ease,filter .12s ease}
+
+/* v29：照片中主控制區所有文字統一放大到「房間深」字級 */
+:root{ --photo-control-font-size:16px; }
+
+/* 房間尺寸：牆高、房間寬、房間深、數值與 cm */
+.topbar > .pill:nth-of-type(1),
+.topbar > .pill:nth-of-type(2),
+.topbar > .pill:nth-of-type(3),
+.topbar > .pill:nth-of-type(1) label,
+.topbar > .pill:nth-of-type(2) label,
+.topbar > .pill:nth-of-type(3) label,
+.topbar > .pill:nth-of-type(1) input,
+.topbar > .pill:nth-of-type(2) input,
+.topbar > .pill:nth-of-type(3) input,
+.topbar > .pill:nth-of-type(1) span,
+.topbar > .pill:nth-of-type(2) span,
+.topbar > .pill:nth-of-type(3) span{
+  font-size:var(--photo-control-font-size) !important;
+  font-weight:700 !important;
+}
+
+/* 照片中的九個主功能按鈕 */
+#panelBtn,#applyRoom,#roomTypeBtn,#doorBtn,#btn2d,#btn3d,#saveBtn,#loadBtn,#printBtn{
+  font-size:var(--photo-control-font-size) !important;
+  font-weight:700 !important;
+}
+
+/* 下方旋轉、複製、置中 */
+#rotateLeft,#rotateRight,#duplicate,#centerObj{
+  font-size:var(--photo-control-font-size) !important;
+  font-weight:700 !important;
+}
+
+/* 手機版也固定同一字級，避免舊 media query 再縮小 */
+@media(max-width:800px){
+  .topbar > .pill:nth-of-type(1),
+  .topbar > .pill:nth-of-type(2),
+  .topbar > .pill:nth-of-type(3),
+  .topbar > .pill:nth-of-type(1) label,
+  .topbar > .pill:nth-of-type(2) label,
+  .topbar > .pill:nth-of-type(3) label,
+  .topbar > .pill:nth-of-type(1) input,
+  .topbar > .pill:nth-of-type(2) input,
+  .topbar > .pill:nth-of-type(3) input,
+  .topbar > .pill:nth-of-type(1) span,
+  .topbar > .pill:nth-of-type(2) span,
+  .topbar > .pill:nth-of-type(3) span,
+  #panelBtn,#applyRoom,#roomTypeBtn,#doorBtn,#btn2d,#btn3d,
+  #saveBtn,#loadBtn,#printBtn,#rotateLeft,#rotateRight,#duplicate,#centerObj{
+    font-size:var(--photo-control-font-size) !important;
+    font-weight:700 !important;
+  }
+}
+@media(max-width:420px){
+  .topbar > .pill:nth-of-type(1),
+  .topbar > .pill:nth-of-type(2),
+  .topbar > .pill:nth-of-type(3),
+  .topbar > .pill:nth-of-type(1) label,
+  .topbar > .pill:nth-of-type(2) label,
+  .topbar > .pill:nth-of-type(3) label,
+  .topbar > .pill:nth-of-type(1) input,
+  .topbar > .pill:nth-of-type(2) input,
+  .topbar > .pill:nth-of-type(3) input,
+  .topbar > .pill:nth-of-type(1) span,
+  .topbar > .pill:nth-of-type(2) span,
+  .topbar > .pill:nth-of-type(3) span,
+  #panelBtn,#applyRoom,#roomTypeBtn,#doorBtn,#btn2d,#btn3d,
+  #saveBtn,#loadBtn,#printBtn,#rotateLeft,#rotateRight,#duplicate,#centerObj{
+    font-size:var(--photo-control-font-size) !important;
+  }
+}
+
+
+/* v30：2D 家具名稱與尺寸文字，統一為「複製／置中」字級 */
+#planSvg .label,
+#planSvg .measure{
+  font-size:16px !important;
+  font-weight:700 !important;
+}
+
+/* 家具名稱稍微加強辨識度 */
+#planSvg .label{
+  font-weight:800 !important;
+}
+
+/* 手機版也固定相同字級，不被舊規則縮小 */
+@media(max-width:800px){
+  #planSvg .label,
+  #planSvg .measure{
+    font-size:16px !important;
+  }
+}
+@media(max-width:420px){
+  #planSvg .label,
+  #planSvg .measure{
+    font-size:16px !important;
+  }
+}
+
+
+/* v31：牆高與房間寬／房間深完全同字級 */
+.topbar > .pill:nth-of-type(1) label,
+.topbar > .pill:nth-of-type(2) label,
+.topbar > .pill:nth-of-type(3) label{
+  font-size:16px !important;
+  font-weight:700 !important;
+  line-height:1.2 !important;
+}
+
+
+/* v31：2D 家具文字強制放大 */
+#planSvg text.label{font-size:26px !important;font-weight:800 !important;}
+#planSvg text.measure{font-size:22px !important;font-weight:700 !important;}
+
+
+/* v32：精準修正「牆高」字級，不再使用 nth-of-type */
+.topbar > .room-height-pill > label{
+  font-size:16px !important;
+  font-weight:700 !important;
+  line-height:1.2 !important;
+  letter-spacing:0 !important;
+  transform:none !important;
+  -webkit-text-size-adjust:100% !important;
+  text-size-adjust:100% !important;
+}
+@media(max-width:800px){
+  .topbar > .room-height-pill > label{
+    font-size:16px !important;
+    font-weight:700 !important;
+  }
+}
+@media(max-width:420px){
+  .topbar > .room-height-pill > label{
+    font-size:16px !important;
+    font-weight:700 !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -806,7 +1181,7 @@
     <button class="btn mobile-panel-btn" id="panelBtn">☰ 家具</button>
     <div class="pill"><label>房間寬</label><input id="roomW" type="number" min="100" max="3000" step="10" value="400"><span>cm</span></div>
     <div class="pill"><label>房間深</label><input id="roomD" type="number" min="100" max="3000" step="10" value="500"><span>cm</span></div>
-    <div class="pill"><label>牆高</label><input id="roomH" type="number" min="180" max="600" step="10" value="280"><span>cm</span></div>
+    <div class="pill room-height-pill"><label>牆高</label><input id="roomH" type="number" min="180" max="600" step="10" value="280"><span>cm</span></div>
     <button class="btn" id="applyRoom">套用房間</button>
     <button class="btn" id="roomTypeBtn">房型</button>
     <button class="btn" id="doorBtn">房門</button>
@@ -1116,6 +1491,65 @@ function findFreePosition(item){
   }
   return null;
 }
+
+// v28：放開家具時，自動移到「離目前位置最近」的不重疊位置。
+// 拖曳過程仍允許穿過/覆蓋其他家具；只有 pointerup 時才整理位置。
+function findNearestNonOverlapPosition(item){
+  if(!item || item.allowOverlap || !itemHasDisallowedOverlap(item)){
+    return item ? {x:item.x,y:item.y} : null;
+  }
+
+  const startX=item.x, startY=item.y;
+  const rad=item.rot*Math.PI/180;
+  const ex=Math.abs(Math.cos(rad))*item.w/2+Math.abs(Math.sin(rad))*item.d/2;
+  const ey=Math.abs(Math.sin(rad))*item.w/2+Math.abs(Math.cos(rad))*item.d/2;
+
+  // 小步距向外搜尋，讓自動分開後的位置儘可能貼近使用者放手處。
+  const step=Math.max(2,Math.min(8,Math.min(item.w,item.d)/12));
+  const maxR=Math.hypot(state.room.w,state.room.d);
+  const angleStep=10;
+
+  for(let r=step;r<=maxR;r+=step){
+    for(let a=0;a<360;a+=angleStep){
+      const ar=a*Math.PI/180;
+      let x=startX+Math.cos(ar)*r;
+      let y=startY+Math.sin(ar)*r;
+
+      if(state.room.type!=='custom'){
+        x=clamp(x,ex,state.room.w-ex);
+        y=clamp(y,ey,state.room.d-ey);
+      }else if(!pointInPolygon(x,y,state.room.points)){
+        continue;
+      }
+
+      if(!furnitureWouldOverlap(item,x,y,item.rot,item.w,item.d,item.allowOverlap)){
+        return {x,y};
+      }
+    }
+  }
+  return null;
+}
+
+function resolveFurnitureOverlapOnRelease(item){
+  if(!item || item.allowOverlap || !itemHasDisallowedOverlap(item)) return false;
+
+  const free=findNearestNonOverlapPosition(item);
+  if(free){
+    item.x=free.x;
+    item.y=free.y;
+    return true;
+  }
+
+  // 極端情況：附近完全沒有空間時，退回全房間搜尋。
+  const fallback=findFreePosition(item);
+  if(fallback){
+    item.x=fallback.x;
+    item.y=fallback.y;
+    return true;
+  }
+  return false;
+}
+
 function collisionFeedback(){
   const it=selectedItem();
   if(!it)return;
@@ -1255,6 +1689,28 @@ function render2D(){
   const {scale,ox,oy,rw,rd}=roomViewBox();
   svg.innerHTML='';
   const ns='http://www.w3.org/2000/svg';
+
+  const defs=document.createElementNS(ns,'defs');
+
+  const floorGrad=document.createElementNS(ns,'linearGradient');
+  floorGrad.setAttribute('id','floorWoodGradient');
+  floorGrad.setAttribute('x1','0'); floorGrad.setAttribute('y1','0');
+  floorGrad.setAttribute('x2','1'); floorGrad.setAttribute('y2','1');
+  [['0%','#eadbc9'],['38%','#cfb69b'],['68%','#dec8b0'],['100%','#b79e85']].forEach(([o,c])=>{
+    const s=document.createElementNS(ns,'stop'); s.setAttribute('offset',o); s.setAttribute('stop-color',c); floorGrad.appendChild(s);
+  });
+  defs.appendChild(floorGrad);
+
+  const mkFilter=(id,dx,dy,std,op)=>{
+    const f=document.createElementNS(ns,'filter');
+    f.setAttribute('id',id);f.setAttribute('x','-35%');f.setAttribute('y','-35%');f.setAttribute('width','170%');f.setAttribute('height','180%');
+    f.innerHTML=`<feDropShadow dx="${dx}" dy="${dy}" stdDeviation="${std}" flood-color="#40352d" flood-opacity="${op}"/>`;
+    defs.appendChild(f);
+  };
+  mkFilter('roomShadow',0,10,9,.22);
+  mkFilter('furnitureShadow',0,7,5,.34);
+  mkFilter('selectedFurnitureShadow',0,8,6,.46);
+  svg.appendChild(defs);
 
   let room;
   if(state.room.type==='custom' && Array.isArray(state.room.points) && state.room.points.length>=3){
@@ -1492,19 +1948,43 @@ function render2D(){
     rect.setAttribute('width',it.w*scale);
     rect.setAttribute('height',it.d*scale);
     rect.setAttribute('rx',Math.min(12,Math.max(3,8*scale)));
-    rect.setAttribute('fill',it.color);
+    const gradId='fg_'+String(it.id).replace(/[^a-zA-Z0-9_-]/g,'_');
+    const grad=document.createElementNS(ns,'linearGradient');
+    grad.setAttribute('id',gradId);grad.setAttribute('x1','0');grad.setAttribute('y1','0');grad.setAttribute('x2','1');grad.setAttribute('y2','1');
+    const base=hexToRgb(it.color||'#b88b5d');
+    const shade=f=>`rgb(${Math.max(0,Math.min(255,Math.round(base.r*f)))},${Math.max(0,Math.min(255,Math.round(base.g*f)))},${Math.max(0,Math.min(255,Math.round(base.b*f)))})`;
+    [['0%',shade(1.28)],['45%',shade(1.03)],['100%',shade(.72)]].forEach(([o,c])=>{
+      const st=document.createElementNS(ns,'stop');st.setAttribute('offset',o);st.setAttribute('stop-color',c);grad.appendChild(st);
+    });
+    defs.appendChild(grad);
+    rect.setAttribute('fill',`url(#${gradId})`);
     rect.setAttribute('class','furniture'+(it.id===state.selected?' selected':''));
     g.appendChild(rect);
 
+    const shine=document.createElementNS(ns,'rect');
+    shine.setAttribute('x',-it.w*scale/2+3);
+    shine.setAttribute('y',-it.d*scale/2+3);
+    shine.setAttribute('width',Math.max(0,it.w*scale-6));
+    shine.setAttribute('height',Math.max(3,Math.min(10,it.d*scale*.12)));
+    shine.setAttribute('rx','4');
+    shine.setAttribute('fill','rgba(255,255,255,.30)');
+    shine.setAttribute('pointer-events','none');
+    g.appendChild(shine);
+
     const txt=document.createElementNS(ns,'text');
     txt.setAttribute('class','label');
+    // v31：直接在 SVG 元素指定字級，避免 CSS/縮放規則覆蓋
+    txt.setAttribute('font-size','26');
+    txt.setAttribute('font-weight','800');
     txt.setAttribute('transform',`rotate(${-it.rot})`);
     txt.textContent=it.name;
     g.appendChild(txt);
 
     const ms=document.createElementNS(ns,'text');
     ms.setAttribute('class','measure');
-    ms.setAttribute('y',22);
+    ms.setAttribute('font-size','22');
+    ms.setAttribute('font-weight','700');
+    ms.setAttribute('y',28);
     ms.setAttribute('transform',`rotate(${-it.rot})`);
     ms.textContent=`${it.w}×${it.d}`;
     g.appendChild(ms);
@@ -1637,21 +2117,42 @@ svg.addEventListener('pointermove',e=>{
   render2D(); renderList(); syncEditor(); updateStatus();
 });
 function endDrag(e){
+  // 先保留這次被拖曳的家具，放手後才進行自動避讓。
+  const releasedDrag=drag;
+  const releasedItem=releasedDrag ? state.items.find(x=>x.id===releasedDrag.id) : null;
+
   drag=null;
   vertexDrag=null;
   doorDrag=null;
+
   if(state.room.type==='custom') updateRoomBoundsFromPoints();
+
+  if(releasedItem && !releasedItem.allowOverlap && itemHasDisallowedOverlap(releasedItem)){
+    const moved=resolveFurnitureOverlapOnRelease(releasedItem);
+    if(moved){
+      $('helpText').textContent=`${releasedItem.name} 與其他家具重疊，已自動移到最近的空位`;
+    }else{
+      $('helpText').textContent=`${releasedItem.name} 附近找不到足夠空位，請再調整位置或尺寸`;
+      collisionFeedback();
+    }
+  }
+
+  renderAll();
 }
 svg.addEventListener('pointerup',endDrag);
 svg.addEventListener('pointercancel',endDrag);
 
 window.addEventListener('pointerup',e=>{
-  if(doorDrag && e.pointerId===doorDrag.pid){
+  if((doorDrag && e.pointerId===doorDrag.pid) ||
+     (drag && e.pointerId===drag.pid) ||
+     (vertexDrag && e.pointerId===vertexDrag.pid)){
     endDrag(e);
   }
 },{passive:false});
 window.addEventListener('pointercancel',e=>{
-  if(doorDrag && e.pointerId===doorDrag.pid){
+  if((doorDrag && e.pointerId===doorDrag.pid) ||
+     (drag && e.pointerId===drag.pid) ||
+     (vertexDrag && e.pointerId===vertexDrag.pid)){
     endDrag(e);
   }
 },{passive:false});
@@ -2341,8 +2842,9 @@ function renderOffline3D(){
 
   ctx.setTransform(dpr,0,0,dpr,0,0);
   const bg=ctx.createLinearGradient(0,0,0,h);
-  bg.addColorStop(0,'#D8E0E1');
-  bg.addColorStop(1,'#EEF0EC');
+  bg.addColorStop(0,'#f7f4ef');
+  bg.addColorStop(.52,'#ddd4cb');
+  bg.addColorStop(1,'#bdb1a6');
   ctx.fillStyle=bg;
   ctx.fillRect(0,0,w,h);
 
@@ -2354,14 +2856,14 @@ function renderOffline3D(){
   const floorPts=(state.room.type==='custom' && state.room.points?.length>=3)
     ? state.room.points.map(([x,y])=>[x+ox,y+oy,0])
     : [[ox,oy,0],[ox+W,oy,0],[ox+W,oy+D,0],[ox,oy+D,0]];
-  addFace(faces,floorPts,'#D8C7A8',1,'rgba(83,84,78,.45)');
+  addFace(faces,floorPts,'#c7ad92',1,'rgba(70,58,48,.48)');
 
   // Walls: draw every wall, but use a low alpha so the room remains readable.
   const roomPts=(state.room.type==='custom' && state.room.points?.length>=3)
     ? state.room.points.map(([x,y])=>[x+ox,y+oy])
     : [[ox,oy],[ox+W,oy],[ox+W,oy+D],[ox,oy+D]];
   for(let i=0;i<roomPts.length;i++){
-    addWallSegment(faces,roomPts[i],roomPts[(i+1)%roomPts.length],H,6,'#F1F3F2');
+    addWallSegment(faces,roomPts[i],roomPts[(i+1)%roomPts.length],H,7,'#eee9e3');
   }
 
   // Furniture
