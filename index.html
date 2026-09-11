@@ -1,0 +1,2170 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>3D 房間家具擺設工具</title>
+<style>
+
+  :root{
+    --m-bg:#E7E8E3;
+    --m-panel:#F2F0EB;
+    --m-card:#E5E0D8;
+    --m-line:#A6A39C;
+    --m-text:#4F5656;
+    --m-muted:#7A7F7A;
+    --m-blue:#8FA3AD;
+    --m-blue-dark:#667D87;
+    --m-green:#9CAA9B;
+    --m-rose:#B79C99;
+    --m-clay:#B79A7B;
+    --m-sand:#C9BBA8;
+    --m-shadow:rgba(59,66,67,.12);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI","Noto Sans TC",sans-serif;background:var(--m-bg);color:var(--m-text)}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  #app{width:100%;height:100%;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+  .topbar{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    padding:8px 10px;background:var(--m-panel);border-bottom:1px solid var(--m-line);
+    z-index:20
+  }
+  .brand{font-weight:800;margin-right:4px;white-space:nowrap}
+  .pill{display:flex;align-items:center;gap:5px;background:#E4E4DF;border:1px solid #C7C6C0;border-radius:10px;padding:5px 7px}
+  .pill label{font-size:12px;color:#667085;white-space:nowrap}
+  .pill input{width:72px;border:0;background:#F7F5F1;border-radius:7px;padding:6px;text-align:right;outline:none}
+  .btn{
+    border:1px solid #B8B6AF;background:#F5F3EE;color:var(--m-text);border-radius:9px;
+    min-height:38px;padding:7px 11px;font-weight:650
+  }
+  .btn:hover{background:#E8E6E0}
+  .btn.primary{background:var(--m-blue-dark);color:#fff;border-color:var(--m-blue-dark)}
+  .btn.danger{color:#b42318}
+  .btn.active{background:#CCD6D8;border-color:#8FA3AD}
+  .workspace{min-height:0;display:grid;grid-template-columns:320px 1fr;overflow:hidden}
+  .sidebar{
+    min-height:0;overflow:auto;background:var(--m-panel);border-right:1px solid #C7C6C0;
+    padding:12px
+  }
+  .section{margin-bottom:16px}
+  .section h3{font-size:14px;margin:0 0 8px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .field{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .field label{font-size:12px;color:#667085}
+  .field input,.field select{
+    width:100%;border:1px solid #cfd6df;border-radius:8px;padding:9px 10px;background:#fff;min-height:40px
+  }
+  .preset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+  .preset{border:1px solid #C7C2B8;background:#E9E5DE;border-radius:9px;padding:9px 6px;font-size:13px;transition:.16s ease;min-height:46px}
+  .preset:active,.preset.flash{background:#BFCBCD;border-color:#7D939D;transform:scale(.97)}
+  .preset .sound-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:transparent;margin-left:4px;vertical-align:middle}
+  .preset.flash .sound-dot{background:#6F8792;box-shadow:0 0 0 4px rgba(111,135,146,.16)}
+  .sound-toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:50;background:#6F7E7A;color:white;border-radius:999px;padding:7px 13px;font-size:12px;opacity:0;pointer-events:none;transition:.18s ease}
+  .sound-toast.show{opacity:1;transform:translateX(-50%) translateY(4px)}
+  .list{display:flex;flex-direction:column;gap:7px}
+  .item{
+    border:1px solid #C7C2B8;border-radius:9px;padding:8px;background:#ECE8E1;
+    display:grid;grid-template-columns:1fr auto;gap:5px;align-items:center
+  }
+  .item.selected{border-color:#7D939D;background:#D8E0E0}
+  .item .name{font-weight:700;font-size:13px}
+  .item .meta{font-size:11px;color:#667085}
+  .canvas-wrap{position:relative;min-width:0;min-height:0;overflow:hidden;background:#D9DEDD}
+  #planView,#view3d{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+  #view3d{display:none}
+  .floating{
+    position:absolute;right:10px;top:10px;z-index:10;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end
+  }
+  .help{
+    position:absolute;left:10px;bottom:10px;z-index:10;
+    background:rgba(255,255,255,.91);backdrop-filter:blur(6px);
+    border:1px solid #d6dbe2;border-radius:10px;padding:7px 9px;font-size:12px;color:#475467;max-width:360px
+  }
+  .status{
+    position:absolute;right:10px;bottom:10px;z-index:10;
+    background:rgba(79,86,86,.88);color:#fff;border-radius:9px;padding:7px 9px;font-size:12px
+  }
+  #planSvg{width:100%;height:100%;display:block;background:linear-gradient(#e8edf1 1px,transparent 1px),linear-gradient(90deg,#e8edf1 1px,transparent 1px);background-size:20px 20px}
+  .room-floor{fill:#EEE9DE;stroke:#5F6664;stroke-width:4}
+  .furniture{stroke:#5F6664;stroke-width:2;cursor:grab}
+  .furniture.selected{stroke:#6F8792;stroke-width:4}
+  .label{font-size:18px;fill:#4F5656;font-weight:800;pointer-events:none;text-anchor:middle;dominant-baseline:middle}
+  .measure{font-size:13px;fill:#6F7470;pointer-events:none;text-anchor:middle}
+  .rotate-handle{fill:#fff;stroke:#6F8792;stroke-width:3;cursor:grab}
+  .wall-label{font-size:15px;fill:#5D6461;font-weight:700}
+  #threeCanvas{display:block;width:100%;height:100%}
+  .mobile-panel-btn{display:none}
+  .mobile-back-section{display:none}
+  @media(max-width:800px){
+    .workspace{grid-template-columns:1fr}
+    .sidebar{
+      position:absolute;left:0;top:57px;bottom:0;width:min(88vw,340px);
+      z-index:30;transform:translateX(-102%);transition:transform .22s ease;
+      box-shadow:8px 0 24px rgba(0,0,0,.14)
+    }
+    .sidebar.open{transform:translateX(0)}
+    .mobile-panel-btn{display:inline-flex}
+    .mobile-back-section{display:block}
+    .brand{width:auto;font-size:15px;flex:1 1 100%}
+    .topbar{gap:6px;padding:6px}
+    .pill{padding:3px 5px}
+    .pill input{width:62px;padding:5px}
+    .btn{min-height:36px;padding:6px 9px}
+    .help{max-width:70%;font-size:11px}
+  }
+
+  .canvas-wrap{background:#D9DEDD}
+  #planSvg{
+    background:
+      linear-gradient(rgba(255,255,255,.28) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.28) 1px,transparent 1px);
+    background-size:24px 24px
+  }
+  .print-only{display:none}
+  @media print{
+    @page{size:A4 portrait;margin:10mm}
+    html,body{width:auto;height:auto;overflow:visible;background:white}
+    #app{display:block;height:auto}
+    .topbar,.sidebar,.floating,.help,.status{display:none!important}
+    .workspace{display:block!important;overflow:visible!important}
+    .canvas-wrap{position:static!important;height:auto!important;background:white!important;overflow:visible!important}
+    #planView{position:static!important;display:block!important;width:100%!important;height:auto!important}
+    #view3d{display:none!important}
+    #planSvg{width:100%!important;height:auto!important;min-height:0!important;background:white!important}
+    .print-only{display:block!important;text-align:center;margin:0 0 8mm;font-size:18px;font-weight:700;color:#4F5656}
+  }
+
+
+  .roomtype-panel{
+    position:absolute;inset:12px auto auto 12px;z-index:40;
+    width:min(420px,calc(100% - 24px));
+    background:var(--m-panel);border:1px solid #BDB9B0;border-radius:14px;
+    box-shadow:0 12px 30px var(--m-shadow);padding:12px;display:none
+  }
+  .roomtype-panel.open{display:block}
+  .roomtype-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+  .roomtype-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .roomtype-card{
+    min-height:74px;border:1px solid #C9C3B9;background:#E9E5DE;color:var(--m-text);
+    border-radius:11px;padding:10px;display:flex;align-items:center;gap:9px;text-align:left
+  }
+  .roomtype-card.active{background:#CBD5D5;border-color:#7D939D}
+  .roomtype-icon{font-size:27px;line-height:1}
+  .roomtype-card b{display:block;font-size:14px}
+  .roomtype-card small{display:block;margin-top:3px;color:var(--m-muted);font-size:11px}
+  .custom-shape-box{display:none;margin-top:12px;border-top:1px solid #CBC6BC;padding-top:10px}
+  .custom-shape-box.show{display:block}
+  .custom-presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+  .shape-help{font-size:12px;color:var(--m-muted);line-height:1.5;margin:6px 0}
+  #shapePoints{
+    width:100%;resize:vertical;min-height:128px;border:1px solid #BDB9B0;border-radius:9px;
+    background:#F7F5F1;color:var(--m-text);padding:9px;font:13px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace
+  }
+  .shape-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .shape-msg{min-height:18px;font-size:12px;color:#7A6A5F;margin-top:7px}
+  @media(max-width:800px){
+    .roomtype-panel{left:8px;top:8px;width:calc(100% - 16px)}
+    .roomtype-options{grid-template-columns:1fr}
+  }
+
+
+  /* 房型拖曳編輯 */
+  .room-edit-handle{
+    fill:#F7F5F1;stroke:#6F8792;stroke-width:4;cursor:grab;
+    filter:drop-shadow(0 2px 3px rgba(70,75,75,.18))
+  }
+  .room-edit-handle.active{fill:#BFCBCD;stroke:#596F79}
+  .room-edge-label{
+    font-size:15px;font-weight:800;fill:#596463;
+    paint-order:stroke;stroke:#F5F3EE;stroke-width:5px;stroke-linejoin:round;
+    pointer-events:none;text-anchor:middle;dominant-baseline:middle
+  }
+  .room-edit-banner{
+    position:absolute;left:50%;top:10px;transform:translateX(-50%);
+    z-index:35;background:rgba(95,111,113,.92);color:#fff;border-radius:999px;
+    padding:8px 13px;font-size:12px;font-weight:700;display:none;
+    box-shadow:0 4px 12px rgba(60,65,65,.14)
+  }
+  .room-edit-banner.show{display:block}
+  .edit-room-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .edit-room-note{font-size:12px;line-height:1.55;color:var(--m-muted);margin:8px 0 0}
+  .vertex-add{background:#D9DFDC;border-color:#9CAA9B}
+  .fullscreen-canvas-btn{display:none}
+
+  /* 2D 優先吃滿可用空間 */
+  .workspace{grid-template-columns:0 1fr}
+  .sidebar{
+    position:absolute;left:0;top:0;bottom:0;width:min(88vw,340px);
+    z-index:30;transform:translateX(-102%);transition:transform .22s ease;
+    box-shadow:8px 0 24px rgba(0,0,0,.14)
+  }
+  .sidebar.open{transform:translateX(0)}
+  .mobile-panel-btn{display:inline-flex}
+  .mobile-back-section{display:block}
+  .canvas-wrap{width:100%;height:100%;min-width:0;min-height:0}
+  #planView,#view3d{inset:0}
+  @media(min-width:801px){
+    .sidebar{top:0}
+    .mobile-panel-btn{display:inline-flex}
+    .mobile-back-section{display:block}
+  }
+
+
+  @media(max-width:800px){
+    #app{grid-template-rows:auto minmax(0,1fr)}
+    .topbar{padding:5px 6px;gap:5px}
+    .brand{font-size:14px}
+    .pill{padding:2px 4px}
+    .pill label{font-size:11px}
+    .pill input{width:56px;padding:4px}
+    .btn{min-height:34px;padding:5px 8px}
+    .floating{top:6px;right:6px;gap:4px}
+    .floating .btn{padding:5px 7px;min-height:34px}
+    .help{left:6px;bottom:6px;max-width:58%;padding:5px 7px}
+    .status{right:6px;bottom:6px;max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  }
+
+
+  /* v6：手機滿版與 2D 顯示穩定性 */
+  html,body{
+    width:100%;
+    height:100%;
+    min-height:100%;
+    margin:0;
+  }
+  #app{
+    width:100%;
+    height:100vh;
+    height:100dvh;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .topbar{
+    flex:0 0 auto;
+    width:100%;
+  }
+  .workspace{
+    flex:1 1 auto;
+    width:100%;
+    min-height:0;
+    display:block;
+    position:relative;
+    overflow:hidden;
+  }
+  .canvas-wrap{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+  }
+  #planView,#view3d{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+  #planSvg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
+  }
+
+  @media(max-width:800px){
+    .topbar{
+      display:grid!important;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:6px;
+      padding:6px;
+      align-items:stretch;
+    }
+    .brand{
+      grid-column:1/-1;
+      width:100%!important;
+      margin:0;
+      padding:2px 3px;
+      font-size:15px;
+    }
+    .topbar > .pill,
+    .topbar > .btn{
+      width:100%;
+      min-width:0;
+      margin:0;
+    }
+    .topbar > .pill{
+      padding:4px 6px;
+      justify-content:center;
+    }
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2){
+      grid-column:span 2;
+    }
+    .topbar > .pill:nth-of-type(3){
+      grid-column:span 1;
+    }
+    .topbar > .pill input{
+      min-width:0;
+      width:60px!important;
+      flex:1 1 auto;
+    }
+    #panelBtn{grid-column:span 1}
+    #applyRoom{grid-column:span 1}
+    #roomTypeBtn{grid-column:span 1}
+    #btn2d{grid-column:span 1}
+    #btn3d{grid-column:span 1}
+    #saveBtn{grid-column:span 1}
+    #loadBtn{grid-column:span 1}
+    #printBtn{grid-column:span 1}
+
+    .floating{
+      top:6px;
+      right:6px;
+      left:6px;
+      justify-content:flex-end;
+    }
+    .floating .btn{
+      flex:0 1 auto;
+      min-width:0;
+      padding:5px 7px;
+    }
+  }
+
+
+  @media(max-width:420px){
+    .topbar{gap:5px;padding:5px}
+    .topbar .btn{font-size:13px;padding:5px 4px}
+    .topbar .pill label{font-size:10px}
+    .topbar .pill span{font-size:11px}
+    .topbar .pill input{font-size:16px!important;width:50px!important}
+    #printBtn{font-size:12px}
+  }
+
+
+  /* v8：房間寬度、深度控制欄固定等寬 */
+  @media(max-width:800px){
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2){
+      grid-column:span 2;
+      width:100%;
+      min-width:0;
+      display:grid;
+      grid-template-columns:auto minmax(52px,1fr) auto;
+      align-items:center;
+    }
+    .topbar > .pill:nth-of-type(1) input,
+    .topbar > .pill:nth-of-type(2) input{
+      width:100%!important;
+      min-width:0!important;
+    }
+  }
+
+
+  /* v9：房間寬 / 房間深兩欄嚴格等寬 */
+  @media(max-width:800px){
+    .topbar{
+      grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    }
+
+    /* 房間寬、房間深都固定佔兩欄，各 50% */
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2){
+      grid-column:span 2 !important;
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      display:grid !important;
+      grid-template-columns:56px minmax(0,1fr) 28px !important;
+      align-items:center !important;
+      gap:4px !important;
+      padding:4px 6px !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) label,
+    .topbar > .pill:nth-of-type(2) label{
+      width:56px !important;
+      min-width:56px !important;
+      text-align:left !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) input,
+    .topbar > .pill:nth-of-type(2) input{
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      box-sizing:border-box !important;
+      text-align:right !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) span,
+    .topbar > .pill:nth-of-type(2) span{
+      width:28px !important;
+      min-width:28px !important;
+      text-align:left !important;
+    }
+  }
+
+
+  /* v10：修正第一列欄位配置
+     家具 = 1欄，房間寬 = 2欄，房間深 = 2欄
+     因此房間寬與房間深必定完全等寬 */
+  @media(max-width:800px){
+    .topbar{
+      display:grid !important;
+      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+      gap:6px !important;
+      width:100% !important;
+    }
+
+    .brand{
+      grid-column:1 / -1 !important;
+    }
+
+    #panelBtn{
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+
+    .topbar > .pill:nth-of-type(1){
+      grid-column:span 2 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+
+    .topbar > .pill:nth-of-type(2){
+      grid-column:span 2 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+
+    /* 房間寬、房間深內部也使用完全相同配置 */
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2){
+      display:grid !important;
+      grid-template-columns:58px minmax(0,1fr) 30px !important;
+      align-items:center !important;
+      gap:4px !important;
+      padding:4px 6px !important;
+      box-sizing:border-box !important;
+      max-width:none !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) label,
+    .topbar > .pill:nth-of-type(2) label{
+      width:58px !important;
+      min-width:58px !important;
+      max-width:58px !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) input,
+    .topbar > .pill:nth-of-type(2) input{
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      box-sizing:border-box !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) span,
+    .topbar > .pill:nth-of-type(2) span{
+      width:30px !important;
+      min-width:30px !important;
+      max-width:30px !important;
+    }
+
+    /* 第二列之後按鈕正常自動排列 */
+    .topbar > .pill:nth-of-type(3),
+    #applyRoom,
+    #roomTypeBtn,
+    #btn2d,
+    #btn3d,
+    #saveBtn,
+    #loadBtn,
+    #printBtn{
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+  }
+
+  @media(max-width:420px){
+    .topbar{
+      grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+      gap:5px !important;
+    }
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2){
+      grid-template-columns:52px minmax(0,1fr) 26px !important;
+      padding:4px 5px !important;
+    }
+    .topbar > .pill:nth-of-type(1) label,
+    .topbar > .pill:nth-of-type(2) label{
+      width:52px !important;
+      min-width:52px !important;
+      max-width:52px !important;
+    }
+    .topbar > .pill:nth-of-type(1) span,
+    .topbar > .pill:nth-of-type(2) span{
+      width:26px !important;
+      min-width:26px !important;
+      max-width:26px !important;
+    }
+  }
+
+
+  /* v11：尺寸列獨立成三等分
+     第一列：房間寬 | 房間深 | 牆高
+     三欄永遠等寬，其他按鈕移到後續列 */
+  @media(max-width:800px){
+    .topbar{
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      gap:6px !important;
+      width:100% !important;
+      padding:6px !important;
+      align-items:stretch !important;
+    }
+
+    .brand{
+      order:0 !important;
+      grid-column:1 / -1 !important;
+      width:100% !important;
+    }
+
+    /* 三個尺寸欄位並列、完全等寬 */
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2),
+    .topbar > .pill:nth-of-type(3){
+      order:1 !important;
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      box-sizing:border-box !important;
+
+      display:grid !important;
+      grid-template-columns:auto minmax(0,1fr) auto !important;
+      align-items:center !important;
+      gap:3px !important;
+      padding:4px 5px !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) label,
+    .topbar > .pill:nth-of-type(2) label,
+    .topbar > .pill:nth-of-type(3) label{
+      width:auto !important;
+      min-width:0 !important;
+      max-width:none !important;
+      font-size:11px !important;
+      white-space:nowrap !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) input,
+    .topbar > .pill:nth-of-type(2) input,
+    .topbar > .pill:nth-of-type(3) input{
+      width:100% !important;
+      min-width:0 !important;
+      max-width:none !important;
+      padding:5px 3px !important;
+      text-align:right !important;
+      font-size:16px !important;
+      box-sizing:border-box !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) span,
+    .topbar > .pill:nth-of-type(2) span,
+    .topbar > .pill:nth-of-type(3) span{
+      width:auto !important;
+      min-width:0 !important;
+      max-width:none !important;
+      font-size:11px !important;
+      white-space:nowrap !important;
+    }
+
+    /* 尺寸列下面才放控制按鈕 */
+    #panelBtn,
+    #applyRoom,
+    #roomTypeBtn{
+      order:2 !important;
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+
+    #btn2d,
+    #btn3d,
+    #saveBtn{
+      order:3 !important;
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+
+    #loadBtn,
+    #printBtn{
+      order:4 !important;
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+  }
+
+  @media(max-width:420px){
+    .topbar{
+      grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+      gap:5px !important;
+      padding:5px !important;
+    }
+
+    .topbar > .pill:nth-of-type(1),
+    .topbar > .pill:nth-of-type(2),
+    .topbar > .pill:nth-of-type(3){
+      grid-template-columns:auto minmax(0,1fr) auto !important;
+      gap:2px !important;
+      padding:4px !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) label,
+    .topbar > .pill:nth-of-type(2) label,
+    .topbar > .pill:nth-of-type(3) label,
+    .topbar > .pill:nth-of-type(1) span,
+    .topbar > .pill:nth-of-type(2) span,
+    .topbar > .pill:nth-of-type(3) span{
+      font-size:10px !important;
+    }
+
+    .topbar > .pill:nth-of-type(1) input,
+    .topbar > .pill:nth-of-type(2) input,
+    .topbar > .pill:nth-of-type(3) input{
+      font-size:15px !important;
+      padding:5px 2px !important;
+    }
+  }
+
+
+  .door-panel{
+    position:absolute;inset:12px auto auto 12px;z-index:40;
+    width:min(420px,calc(100% - 24px));
+    background:var(--m-panel);border:1px solid #BDB9B0;border-radius:14px;
+    box-shadow:0 12px 30px var(--m-shadow);padding:12px;display:none
+  }
+  .door-panel.open{display:block}
+  .door-group{cursor:grab}
+  .door-line{stroke:#6E7775;stroke-width:5;stroke-linecap:round}
+  .door-leaf{stroke:#7E8F92;stroke-width:4;stroke-linecap:round}
+  .door-arc{fill:none;stroke:#9AAAAB;stroke-width:2.5;stroke-dasharray:7 5}
+  .door-selected .door-leaf{stroke:#526B73;stroke-width:6}
+  .door-selected .door-arc{stroke:#6F8792;stroke-width:3.5}
+  .door-label{
+    font-size:13px;font-weight:800;fill:#586260;
+    paint-order:stroke;stroke:#F5F3EE;stroke-width:4px;pointer-events:none;
+    text-anchor:middle
+  }
+  @media(max-width:800px){
+    .door-panel{left:8px;top:8px;width:calc(100% - 16px)}
+    #doorBtn{grid-column:span 1 !important;width:100%!important}
+  }
+
+
+  @media(max-width:800px){
+    #doorBtn{
+      order:2 !important;
+      grid-column:span 1 !important;
+      width:100% !important;
+      min-width:0 !important;
+    }
+  }
+
+
+  /* v13：房門開啟方向箭頭 */
+  .door-arrow{
+    fill:#7E8F92;
+    stroke:#F5F3EE;
+    stroke-width:1.2;
+    stroke-linejoin:round;
+    pointer-events:none;
+  }
+  .door-selected .door-arrow{
+    fill:#526B73;
+  }
+
+
+  .door-direction-legend{
+    margin-top:10px;padding:9px 10px;border:1px solid #C7C2B8;border-radius:9px;
+    background:#E9E5DE;font-size:12px;line-height:1.65;color:var(--m-text)
+  }
+  .door-direction-legend span{display:inline-block;width:22px;font-weight:900}
+  .legend-in{color:#667D87}
+  .legend-out{color:#9B7F73}
+
+
+  /* v15：房門觸控/拖曳穩定性 */
+  .door-hit{
+    stroke:transparent;
+    stroke-width:34;
+    fill:none;
+    pointer-events:stroke;
+    cursor:grab;
+  }
+  .door-group.dragging{cursor:grabbing}
+
+
+  .door-hit{
+    touch-action:none;
+  }
+  @media (pointer:coarse){
+    .door-hit{stroke-width:44}
+  }
+
+
+  /* v17：房門與家具使用相同的單一路徑拖曳模式 */
+  .door-group{
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .door-hit{
+    stroke-width:40;
+    touch-action:none;
+  }
+  @media (pointer:coarse){
+    .door-hit{stroke-width:52}
+  }
+
+
+  /* v18：家具重疊控制 */
+  .overlap-option{
+    display:flex;align-items:flex-start;gap:9px;margin-top:9px;padding:9px 10px;
+    border:1px solid #C7C2B8;border-radius:9px;background:#EEEAE3;
+    cursor:pointer;user-select:none
+  }
+  .overlap-option input{
+    width:20px;height:20px;min-height:20px;margin:1px 0 0;flex:0 0 20px;
+    accent-color:#6F8792
+  }
+  .overlap-option span{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .overlap-option b{font-size:12px;color:#4F5656}
+  .overlap-option small{font-size:10px;line-height:1.35;color:#737976}
+  .overlap-badge{
+    display:inline-block;margin-left:5px;padding:1px 5px;border-radius:999px;
+    background:#DCE4E3;color:#596D71;font-size:9px;font-weight:800;vertical-align:1px
+  }
+  .collision-flash{animation:collisionPulse .22s ease}
+  @keyframes collisionPulse{
+    0%,100%{filter:none}
+    50%{filter:drop-shadow(0 0 5px rgba(160,82,70,.8))}
+  }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">🏠 3D 房間家具擺設</div>
+    <button class="btn mobile-panel-btn" id="panelBtn">☰ 家具</button>
+    <div class="pill"><label>房間寬</label><input id="roomW" type="number" min="100" max="3000" step="10" value="400"><span>cm</span></div>
+    <div class="pill"><label>房間深</label><input id="roomD" type="number" min="100" max="3000" step="10" value="500"><span>cm</span></div>
+    <div class="pill"><label>牆高</label><input id="roomH" type="number" min="180" max="600" step="10" value="280"><span>cm</span></div>
+    <button class="btn" id="applyRoom">套用房間</button>
+    <button class="btn" id="roomTypeBtn">房型</button>
+    <button class="btn" id="doorBtn">房門</button>
+    <button class="btn active" id="btn2d">2D 平面</button>
+    <button class="btn" id="btn3d">3D 立體</button>
+    <button class="btn" id="saveBtn">儲存配置</button>
+    <button class="btn" id="loadBtn">載入配置</button>
+    <button class="btn" id="printBtn">🖨️ 列印 / PDF</button>
+  </div>
+
+  <div class="workspace">
+    <aside class="sidebar" id="sidebar">
+      <div class="section mobile-back-section">
+        <button class="btn primary" id="backMainBtn" style="width:100%">← 返回主畫面</button>
+      </div>
+      <div class="section">
+        <h3>快速新增家具</h3>
+        <div class="preset-grid">
+          <button class="preset" data-preset="singlebed">🛏️ 單人床 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="bed">🛏️ 雙人床 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="sofa">🛋️ 沙發 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="table">🍽️ 餐桌 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="desk">🖥️ 書桌 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="wardrobe">🚪 衣櫃 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="cabinet">🗄️ 櫃子 <span class="sound-dot"></span></button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>自訂家具</h3>
+        <div class="field"><label>名稱</label><input id="fName" value="家具"></div>
+        <div class="grid2" style="margin-top:8px">
+          <div class="field"><label>寬度 X (cm)</label><input id="fW" type="number" min="10" max="1000" value="120"></div>
+          <div class="field"><label>深度 Y (cm)</label><input id="fD" type="number" min="10" max="1000" value="60"></div>
+          <div class="field"><label>高度 Z (cm)</label><input id="fH" type="number" min="5" max="500" value="75"></div>
+          <div class="field"><label>材質色</label><input id="fColor" type="color" value="#B89573" style="padding:4px"></div>
+        </div>
+        <label class="overlap-option">
+          <input id="fAllowOverlap" type="checkbox">
+          <span><b>允許與其他家具重疊</b><small>預設關閉；例如地毯、床下收納等才勾選</small></span>
+        </label>
+        <button class="btn primary" id="addCustom" style="width:100%;margin-top:8px">＋ 新增家具</button>
+      </div>
+
+      <div class="section" id="editSection">
+        <h3>選取家具設定</h3>
+        <div class="field"><label>名稱</label><input id="eName" disabled></div>
+        <div class="grid2" style="margin-top:8px">
+          <div class="field"><label>寬度 (cm)</label><input id="eW" type="number" disabled></div>
+          <div class="field"><label>深度 (cm)</label><input id="eD" type="number" disabled></div>
+          <div class="field"><label>高度 (cm)</label><input id="eH" type="number" disabled></div>
+        </div>
+        <label class="overlap-option edit-overlap">
+          <input id="eAllowOverlap" type="checkbox" disabled>
+          <span><b>允許與其他家具重疊</b><small>勾選後此家具才可與其他家具疊放</small></span>
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <button class="btn" id="updateSelected" disabled>更新</button>
+          <button class="btn danger" id="deleteSelected" disabled>刪除</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>家具清單</h3>
+        <div class="list" id="furnitureList"></div>
+      </div>
+    </aside>
+
+    <main class="canvas-wrap">
+
+      <div class="door-panel" id="doorPanel">
+        <div class="roomtype-head">
+          <strong>房門設定</strong>
+          <button class="btn" id="closeDoorPanel">返回主畫面</button>
+        </div>
+
+        <div class="grid2">
+          <div class="field"><label>門寬 (cm)</label><input id="doorW" type="number" min="50" max="200" value="90"></div>
+          <div class="field"><label>門高 (cm)</label><input id="doorH" type="number" min="160" max="260" value="210"></div>
+          <div class="field"><label>門框厚度 (cm)</label><input id="doorT" type="number" min="5" max="30" value="10"></div>
+          <div class="field"><label>開門方向</label>
+            <select id="doorSwing">
+              <option value="in-left">向內開・左側鉸鏈</option>
+              <option value="in-right">向內開・右側鉸鏈</option>
+              <option value="out-left">向外開・左側鉸鏈</option>
+              <option value="out-right">向外開・右側鉸鏈</option>
+            </select>
+          </div>
+        </div>
+
+        
+        <div class="door-direction-legend">
+          <div><span class="legend-in">↘</span><b>向內</b>：門片打開後位於房間內側</div>
+          <div><span class="legend-out">↗</span><b>向外</b>：門片打開後位於房間外側</div>
+        </div>
+
+        <div class="edit-room-actions">
+          <button class="btn primary" id="addDoor">＋ 新增房門</button>
+          <button class="btn" id="deleteDoor">刪除選取房門</button>
+        </div>
+        <p class="edit-room-note">
+          新增後可直接在 2D 圖拖曳房門沿著牆面移動。「向內／向外」決定門片開向房間內或外；「左／右側鉸鏈」只代表門軸所在側。
+        </p>
+        <div class="shape-msg" id="doorMsg"></div>
+      </div>
+
+      <div class="room-edit-banner" id="roomEditBanner">✋ 房型編輯中：拖曳藍色圓點調整牆面</div>
+
+      <div class="roomtype-panel" id="roomTypePanel">
+        <div class="roomtype-head">
+          <strong>房型設定</strong>
+          <button class="btn" id="closeRoomType">返回主畫面</button>
+        </div>
+
+        <div class="roomtype-options">
+          <button class="roomtype-card active" data-roomtype="rect">
+            <span class="roomtype-icon">▭</span>
+            <span><b>目前房型</b><small>矩形 400 × 500 cm</small></span>
+          </button>
+          <button class="roomtype-card" data-roomtype="custom">
+            <span class="roomtype-icon">⌑</span>
+            <span><b>自訂形狀</b><small>用座標點建立不規則房型</small></span>
+          </button>
+        </div>
+
+        
+        <div class="custom-shape-box" id="customShapeBox">
+          <div class="custom-presets">
+            <button class="btn shapePreset" data-shape="RECT">矩形</button>
+            <button class="btn shapePreset" data-shape="L">L 型</button>
+            <button class="btn shapePreset" data-shape="U">凹 型</button>
+          </div>
+
+          <div class="edit-room-actions">
+            <button class="btn primary" id="startRoomEdit">✋ 開始用手指調整</button>
+            <button class="btn" id="addRoomVertex">＋ 增加轉折點</button>
+            <button class="btn danger" id="removeRoomVertex">－ 刪除選取角點</button>
+          </div>
+          <p class="edit-room-note">
+            在 2D 平面圖直接拖曳藍色圓點即可改變房型。每段牆旁會即時顯示尺寸。
+            「增加轉折點」會在目前最長牆中央新增一個可拖曳角點。
+          </p>
+          <div class="shape-actions">
+            <button class="btn primary" id="finishRoomEdit">完成房型</button>
+            <button class="btn" id="resetShape">還原矩形</button>
+          </div>
+          <div class="shape-msg" id="shapeMsg"></div>
+        </div>
+      </div>
+
+
+      <div class="print-only">3D 房間家具擺設 — 2D 平面配置</div>
+      <div class="sound-toast" id="soundToast">🔊 已加入家具</div>
+      <div class="floating">
+        <button class="btn" id="rotateLeft">↶ -15°</button>
+        <button class="btn" id="rotateRight">↷ +15°</button>
+        <button class="btn" id="duplicate">複製</button>
+        <button class="btn" id="centerObj">置中</button>
+      </div>
+
+      <div id="planView">
+        <svg id="planSvg" viewBox="0 0 1000 800" aria-label="2D 房間平面配置" preserveAspectRatio="xMidYMid meet">
+          <rect x="210" y="65" width="580" height="680" rx="6" class="room-floor"></rect>
+          <text x="500" y="95" class="wall-label" text-anchor="middle">房間 400 × 500 cm</text>
+        </svg>
+      </div>
+
+      <div id="view3d">
+        <canvas id="threeCanvas"></canvas>
+      </div>
+
+      <div class="help" id="helpText">
+        2D：拖曳家具移動；點家具後可用上方 ±15° 旋轉。手機可直接觸控拖曳。
+      </div>
+      <div class="status" id="statusText">未選取家具</div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+const state = {
+  room:{w:400,d:500,h:280,type:'rect',points:[[0,0],[400,0],[400,500],[0,500]]},
+  items:[],
+  selected:null,
+  seq:1,
+  mode:'2d',
+  roomEditing:false,
+  selectedVertex:null,
+  doors:[],
+  selectedDoor:null,
+  doorSeq:1
+};
+
+const presets = {
+  singlebed:{name:'單人床',w:100,d:188,h:50,color:'#B7A69A',allowOverlap:false},
+  bed:{name:'雙人床',w:152,d:188,h:55,color:'#C4B4A5',allowOverlap:false},
+  sofa:{name:'三人沙發',w:210,d:90,h:85,color:'#94A3A3',allowOverlap:false},
+  table:{name:'餐桌',w:150,d:85,h:75,color:'#B89573',allowOverlap:false},
+  desk:{name:'書桌',w:120,d:60,h:75,color:'#A98C70',allowOverlap:false},
+  wardrobe:{name:'衣櫃',w:180,d:60,h:210,color:'#B7AA96',allowOverlap:false},
+  cabinet:{name:'櫃子',w:100,d:45,h:120,color:'#9D8D7E',allowOverlap:false}
+};
+
+const $ = id => document.getElementById(id);
+const svg = $('planSvg');
+const sidebar = $('sidebar');
+let three = null;
+
+function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+
+function normalizeRoomPoints(points){
+  const xs=points.map(p=>p[0]), ys=points.map(p=>p[1]);
+  const minX=Math.min(...xs), minY=Math.min(...ys);
+  return points.map(([x,y])=>[x-minX,y-minY]);
+}
+function updateRoomBoundsFromPoints(){
+  if(!state.room.points?.length)return;
+  const xs=state.room.points.map(p=>p[0]), ys=state.room.points.map(p=>p[1]);
+  state.room.w=Math.max(...xs)-Math.min(...xs);
+  state.room.d=Math.max(...ys)-Math.min(...ys);
+  $('roomW').value=Math.round(state.room.w);
+  $('roomD').value=Math.round(state.room.d);
+}
+function pointInPolygon(x,y,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i][0], yi=pts[i][1], xj=pts[j][0], yj=pts[j][1];
+    const intersect=((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/((yj-yi)||1e-9)+xi);
+    if(intersect) inside=!inside;
+  }
+  return inside;
+}
+
+
+function furnitureCorners(it,x=it.x,y=it.y,rot=it.rot,w=it.w,d=it.d){
+  const rad=(rot||0)*Math.PI/180;
+  const c=Math.cos(rad), s=Math.sin(rad);
+  const hw=w/2, hd=d/2;
+  return [
+    [-hw,-hd],[hw,-hd],[hw,hd],[-hw,hd]
+  ].map(([px,py])=>[x+px*c-py*s,y+px*s+py*c]);
+}
+function projectPolygon(axis,pts){
+  let min=Infinity,max=-Infinity;
+  for(const [x,y] of pts){
+    const v=x*axis[0]+y*axis[1];
+    if(v<min)min=v;
+    if(v>max)max=v;
+  }
+  return {min,max};
+}
+function polygonsOverlap(a,b){
+  const polys=[a,b];
+  for(const pts of polys){
+    for(let i=0;i<pts.length;i++){
+      const p=pts[i], q=pts[(i+1)%pts.length];
+      const ex=q[0]-p[0], ey=q[1]-p[1];
+      const len=Math.hypot(ex,ey)||1;
+      const axis=[-ey/len,ex/len];
+      const pa=projectPolygon(axis,a), pb=projectPolygon(axis,b);
+      // 邊界剛好接觸不算重疊，保留約 0.5 cm 容差
+      if(pa.max<=pb.min+.5 || pb.max<=pa.min+.5) return false;
+    }
+  }
+  return true;
+}
+function furnitureWouldOverlap(it,x=it.x,y=it.y,rot=it.rot,w=it.w,d=it.d,allowOverlap=it.allowOverlap){
+  if(allowOverlap) return false;
+  const test=furnitureCorners(it,x,y,rot,w,d);
+  return state.items.some(other=>{
+    if(other.id===it.id) return false;
+    if(other.allowOverlap) return false;
+    return polygonsOverlap(test,furnitureCorners(other));
+  });
+}
+function placementValid(it,x=it.x,y=it.y,rot=it.rot,w=it.w,d=it.d,allowOverlap=it.allowOverlap){
+  if(state.room.type==='custom' && !pointInPolygon(x,y,state.room.points)) return false;
+  return !furnitureWouldOverlap(it,x,y,rot,w,d,allowOverlap);
+}
+function findFreePosition(item){
+  const startX=state.room.w/2, startY=state.room.d/2;
+  const step=Math.max(15,Math.min(item.w,item.d)/4);
+  const maxR=Math.max(state.room.w,state.room.d);
+  const candidates=[[startX,startY]];
+  for(let r=step;r<=maxR;r+=step){
+    for(let a=0;a<360;a+=30){
+      const rad=a*Math.PI/180;
+      candidates.push([startX+Math.cos(rad)*r,startY+Math.sin(rad)*r]);
+    }
+  }
+  for(const [cx,cy] of candidates){
+    const rad=item.rot*Math.PI/180;
+    const ex=Math.abs(Math.cos(rad))*item.w/2+Math.abs(Math.sin(rad))*item.d/2;
+    const ey=Math.abs(Math.sin(rad))*item.w/2+Math.abs(Math.cos(rad))*item.d/2;
+    const x=clamp(cx,ex,state.room.w-ex);
+    const y=clamp(cy,ey,state.room.d-ey);
+    if(placementValid(item,x,y,item.rot,item.w,item.d,item.allowOverlap)) return {x,y};
+  }
+  return null;
+}
+function collisionFeedback(){
+  const it=selectedItem();
+  if(!it)return;
+  const node=svg.querySelector(`[data-id="${it.id}"]`);
+  if(node){
+    node.classList.remove('collision-flash');
+    void node.getBoundingClientRect();
+    node.classList.add('collision-flash');
+  }
+}
+
+function selectedItem(){ return state.items.find(x=>x.id===state.selected) || null; }
+function makeId(){ return 'f'+(state.seq++); }
+
+function makeDoorId(){ return 'd'+(state.doorSeq++); }
+
+function getRoomEdges(){
+  const pts=(state.room.type==='custom' ? state.room.points : [[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]]);
+  return pts.map((a,i)=>({a,b:pts[(i+1)%pts.length],index:i}));
+}
+function edgeLength(edge){
+  return Math.hypot(edge.b[0]-edge.a[0],edge.b[1]-edge.a[1]);
+}
+function roomPolygonSignedArea(){
+  const pts=(state.room.type==='custom'
+    ? state.room.points
+    : [[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]]);
+  let a=0;
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i], q=pts[(i+1)%pts.length];
+    a += p[0]*q[1] - q[0]*p[1];
+  }
+  return a/2;
+}
+function interiorNormalForEdge(edge){
+  const dx=edge.b[0]-edge.a[0], dy=edge.b[1]-edge.a[1];
+  const len=Math.hypot(dx,dy)||1;
+  // 在房間座標中 y 軸向下。正面積代表目前預設點序，
+  // 其左法線 (-dy, dx) 指向房間內部；反向點序則取相反方向。
+  const sign=roomPolygonSignedArea()>=0 ? 1 : -1;
+  return {x:(-dy/len)*sign, y:(dx/len)*sign};
+}
+function doorWorldPos(door){
+  const edges=getRoomEdges();
+  const e=edges[door.edgeIndex] || edges[0];
+  const t=clamp(door.t,0,1);
+  return {
+    x:e.a[0]+(e.b[0]-e.a[0])*t,
+    y:e.a[1]+(e.b[1]-e.a[1])*t,
+    angle:Math.atan2(e.b[1]-e.a[1],e.b[0]-e.a[0]),
+    edge:e
+  };
+}
+function nearestPointOnSegment(px,py,a,b){
+  const vx=b[0]-a[0], vy=b[1]-a[1];
+  const len2=vx*vx+vy*vy || 1;
+  let t=((px-a[0])*vx+(py-a[1])*vy)/len2;
+  t=clamp(t,0,1);
+  return {x:a[0]+vx*t,y:a[1]+vy*t,t};
+}
+function selectedDoor(){ return state.doors.find(d=>d.id===state.selectedDoor)||null; }
+
+
+function addFurniture(data){
+  const item = {
+    id:makeId(), name:data.name || '家具',
+    w:+data.w||100, d:+data.d||60, h:+data.h||75,
+    color:data.color||'#b88b5d',
+    x:state.room.w/2, y:state.room.d/2, rot:0,
+    allowOverlap:data.allowOverlap===true
+  };
+
+  const free=findFreePosition(item);
+  if(!free && !item.allowOverlap){
+    alert('目前房間內找不到不與其他家具重疊的位置，請先移動家具、縮小尺寸，或明確勾選「允許與其他家具重疊」。');
+    return;
+  }
+  if(free){ item.x=free.x; item.y=free.y; }
+
+  state.items.push(item);
+  state.selected=item.id;
+  renderAll();
+}
+
+function roomViewBox(){
+  const box=svg.getBoundingClientRect();
+  const aspect=(box.width>0 && box.height>0) ? box.width/box.height : 1000/800;
+  const vbH=800;
+  const vbW=Math.max(520,vbH*aspect);
+  svg.setAttribute('viewBox',`0 0 ${vbW} ${vbH}`);
+
+  const padX=34;
+  const padTop=42;
+  const padBottom=28;
+  const availW=vbW-padX*2;
+  const availH=vbH-padTop-padBottom;
+  const rw0=Math.max(+state.room.w||400,1);
+  const rd0=Math.max(+state.room.d||500,1);
+  const scale=Math.min(availW/rw0,availH/rd0);
+  const rw=rw0*scale, rd=rd0*scale;
+  return {
+    scale,
+    ox:(vbW-rw)/2,
+    oy:padTop+(availH-rd)/2,
+    rw,rd,
+    vbW,vbH
+  };
+}
+
+function render2D(){
+  if(!Number.isFinite(+state.room.w) || +state.room.w<=0) state.room.w=400;
+  if(!Number.isFinite(+state.room.d) || +state.room.d<=0) state.room.d=500;
+  if(!Array.isArray(state.room.points) || state.room.points.length<3){
+    state.room.type='rect';
+    state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+  }
+  const {scale,ox,oy,rw,rd}=roomViewBox();
+  svg.innerHTML='';
+  const ns='http://www.w3.org/2000/svg';
+
+  let room;
+  if(state.room.type==='custom' && Array.isArray(state.room.points) && state.room.points.length>=3){
+    room=document.createElementNS(ns,'polygon');
+    const pts=state.room.points.map(([x,y])=>`${ox+x*scale},${oy+y*scale}`).join(' ');
+    room.setAttribute('points',pts);
+    room.setAttribute('class','room-floor');
+    svg.appendChild(room);
+  }else{
+    room=document.createElementNS(ns,'rect');
+    room.setAttribute('x',ox); room.setAttribute('y',oy);
+    room.setAttribute('width',rw); room.setAttribute('height',rd);
+    room.setAttribute('rx',6); room.setAttribute('class','room-floor');
+    svg.appendChild(room);
+  }
+
+  // 矩形房型顯示總寬/總深；自訂房型則由每段牆各自標註
+  if(state.room.type!=='custom'){
+  const dimColor='#657173';
+  const topDim=document.createElementNS(ns,'line');
+  topDim.setAttribute('x1',ox); topDim.setAttribute('y1',oy-20);
+  topDim.setAttribute('x2',ox+rw); topDim.setAttribute('y2',oy-20);
+  topDim.setAttribute('stroke',dimColor); topDim.setAttribute('stroke-width','2');
+  svg.appendChild(topDim);
+  const sideDim=document.createElementNS(ns,'line');
+  sideDim.setAttribute('x1',ox-24); sideDim.setAttribute('y1',oy);
+  sideDim.setAttribute('x2',ox-24); sideDim.setAttribute('y2',oy+rd);
+  sideDim.setAttribute('stroke',dimColor); sideDim.setAttribute('stroke-width','2');
+  svg.appendChild(sideDim);
+
+  const topText=document.createElementNS(ns,'text');
+  topText.setAttribute('x',ox+rw/2); topText.setAttribute('y',oy-28);
+  topText.setAttribute('class','wall-label'); topText.setAttribute('text-anchor','middle');
+  topText.textContent=`${state.room.w} cm`;
+  svg.appendChild(topText);
+
+  const sideText=document.createElementNS(ns,'text');
+  sideText.setAttribute('x',ox-38); sideText.setAttribute('y',oy+rd/2);
+  sideText.setAttribute('class','wall-label'); sideText.setAttribute('text-anchor','middle');
+  sideText.setAttribute('transform',`rotate(-90 ${ox-38} ${oy+rd/2})`);
+  sideText.textContent=`${state.room.d} cm`;
+  svg.appendChild(sideText);
+  }
+
+  const title=document.createElementNS(ns,'text');
+  title.setAttribute('x',ox+rw/2); title.setAttribute('y',oy+22);
+  title.setAttribute('class','wall-label');
+  title.setAttribute('text-anchor','middle');
+  title.textContent=`房間 ${state.room.w} × ${state.room.d} cm`;
+  svg.appendChild(title);
+
+
+  // 自訂房型尺寸標註與拖曳角點
+  if(state.room.type==='custom' && Array.isArray(state.room.points) && state.room.points.length>=3){
+    const pts=state.room.points;
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i], b=pts[(i+1)%pts.length];
+      const x1=ox+a[0]*scale, y1=oy+a[1]*scale;
+      const x2=ox+b[0]*scale, y2=oy+b[1]*scale;
+      const mx=(x1+x2)/2, my=(y1+y2)/2;
+      const dx=x2-x1, dy=y2-y1;
+      const lenPx=Math.hypot(dx,dy)||1;
+      const nx=-dy/lenPx, ny=dx/lenPx;
+      const realLen=Math.hypot(b[0]-a[0],b[1]-a[1]);
+
+      const lbl=document.createElementNS(ns,'text');
+      lbl.setAttribute('x',mx+nx*18);
+      lbl.setAttribute('y',my+ny*18);
+      lbl.setAttribute('class','room-edge-label');
+      lbl.textContent=`${Math.round(realLen)} cm`;
+      svg.appendChild(lbl);
+    }
+
+    if(state.roomEditing){
+      pts.forEach((p,i)=>{
+        const c=document.createElementNS(ns,'circle');
+        c.setAttribute('cx',ox+p[0]*scale);
+        c.setAttribute('cy',oy+p[1]*scale);
+        c.setAttribute('r',i===state.selectedVertex?13:11);
+        c.setAttribute('class','room-edit-handle'+(i===state.selectedVertex?' active':''));
+        c.dataset.vertex=i;
+        c.addEventListener('pointerdown',e=>startVertexDrag(e,i));
+        c.addEventListener('click',e=>{
+          e.stopPropagation();
+          state.selectedVertex=i;
+          render2D();
+        });
+        svg.appendChild(c);
+      });
+    }
+  }
+
+
+  // 房門
+  state.doors.forEach(door=>{
+    const p=doorWorldPos(door);
+    const e=p.edge;
+    const ang=p.angle;
+    const cx=ox+p.x*scale, cy=oy+p.y*scale;
+    const len=door.w*scale;
+    const half=len/2;
+
+    const ux=Math.cos(ang), uy=Math.sin(ang);
+    const inwardN=interiorNormalForEdge(e);
+    const nx=inwardN.x, ny=inwardN.y;
+
+    const hingeLeft=door.swing.endsWith('left');
+    const outward=door.swing.startsWith('out');
+
+    // 左/右只決定鉸鏈在牆段哪一端；不再影響內/外方向。
+    const hSign=hingeLeft?-1:1;
+    const hingeX=cx+ux*half*hSign;
+    const hingeY=cy+uy*half*hSign;
+
+    const closedEndX=cx-ux*half*hSign;
+    const closedEndY=cy-uy*half*hSign;
+
+    // 向內：沿房間內法線；向外：沿相反方向。
+    const normalSign=outward?-1:1;
+    const openEndX=hingeX+nx*len*normalSign;
+    const openEndY=hingeY+ny*len*normalSign;
+
+    const g=document.createElementNS(ns,'g');
+    g.setAttribute('class','door-group'+(door.id===state.selectedDoor?' door-selected':''));
+    g.dataset.door=door.id;
+
+    // 加大透明觸控區，手機上不必精準點在線條上
+    const hit=document.createElementNS(ns,'line');
+    hit.setAttribute('x1',cx-ux*half);
+    hit.setAttribute('y1',cy-uy*half);
+    hit.setAttribute('x2',cx+ux*half);
+    hit.setAttribute('y2',cy+uy*half);
+    hit.setAttribute('class','door-hit');
+    g.appendChild(hit);
+
+    const gap=document.createElementNS(ns,'line');
+    gap.setAttribute('x1',cx-ux*half); gap.setAttribute('y1',cy-uy*half);
+    gap.setAttribute('x2',cx+ux*half); gap.setAttribute('y2',cy+uy*half);
+    gap.setAttribute('class','door-line');
+    g.appendChild(gap);
+
+    const leaf=document.createElementNS(ns,'line');
+    leaf.setAttribute('x1',hingeX); leaf.setAttribute('y1',hingeY);
+    leaf.setAttribute('x2',openEndX); leaf.setAttribute('y2',openEndY);
+    leaf.setAttribute('class','door-leaf');
+    g.appendChild(leaf);
+
+    // Arc path
+    const r=len;
+    const startX=closedEndX, startY=closedEndY;
+    const endX=openEndX, endY=openEndY;
+
+    // 依「關門向量 → 開門向量」的叉積自動決定 SVG 弧線方向，
+    // 不再用左右鉸鏈去猜測內外。
+    const svx=startX-hingeX, svy=startY-hingeY;
+    const evx=endX-hingeX, evy=endY-hingeY;
+    const cross=svx*evy-svy*evx;
+    const sweep=cross>0?1:0;
+
+    const arc=document.createElementNS(ns,'path');
+    arc.setAttribute('d',`M ${startX} ${startY} A ${r} ${r} 0 0 ${sweep} ${endX} ${endY}`);
+    arc.setAttribute('class','door-arc');
+    g.appendChild(arc);
+
+    // 開門方向箭頭：放在開啟弧線末端，指向門片展開方向
+    const arrow=document.createElementNS(ns,'polygon');
+    const arrowSize=Math.max(10,Math.min(18,len*.12));
+
+    // 箭頭方向使用弧線末端的切線方向。
+    // 從關閉位置 closedEnd 沿著 90° 開啟弧線走到 openEnd。
+    const rx=openEndX-hingeX;
+    const ry=openEndY-hingeY;
+    let tx,ty;
+    if(sweep===1){
+      tx=-ry; ty=rx;
+    }else{
+      tx=ry; ty=-rx;
+    }
+    const tLen=Math.hypot(tx,ty)||1;
+    tx/=tLen; ty/=tLen;
+
+    // 箭頭尖端稍微超過弧線終點，使方向更容易辨識
+    const tipX=openEndX+tx*arrowSize*.25;
+    const tipY=openEndY+ty*arrowSize*.25;
+    const baseX=tipX-tx*arrowSize;
+    const baseY=tipY-ty*arrowSize;
+    const px=-ty, py=tx;
+    const p1x=baseX+px*arrowSize*.48;
+    const p1y=baseY+py*arrowSize*.48;
+    const p2x=baseX-px*arrowSize*.48;
+    const p2y=baseY-py*arrowSize*.48;
+    arrow.setAttribute('points',`${tipX},${tipY} ${p1x},${p1y} ${p2x},${p2y}`);
+    arrow.setAttribute('class','door-arrow');
+    g.appendChild(arrow);
+
+    const lbl=document.createElementNS(ns,'text');
+    lbl.setAttribute('x',cx+nx*20);
+    lbl.setAttribute('y',cy+ny*20);
+    lbl.setAttribute('class','door-label');
+    const swingNames={
+      'in-left':'向內・左鉸鏈',
+      'in-right':'向內・右鉸鏈',
+      'out-left':'向外・左鉸鏈',
+      'out-right':'向外・右鉸鏈'
+    };
+    lbl.textContent=`門 ${door.w}×${door.h} · ${swingNames[door.swing]||''}`;
+    g.appendChild(lbl);
+
+    g.addEventListener('pointerdown',e=>startDoorDrag(e,door.id));
+    g.addEventListener('click',e=>{
+      e.stopPropagation();
+      state.selectedDoor=door.id;
+      syncDoorEditor();
+      render2D();
+    });
+
+    svg.appendChild(g);
+  });
+
+  state.items.forEach(it=>{
+    const g=document.createElementNS(ns,'g');
+    const cx=ox+it.x*scale, cy=oy+it.y*scale;
+    g.setAttribute('transform',`translate(${cx} ${cy}) rotate(${it.rot})`);
+    g.dataset.id=it.id;
+
+    const rect=document.createElementNS(ns,'rect');
+    rect.setAttribute('x',-it.w*scale/2);
+    rect.setAttribute('y',-it.d*scale/2);
+    rect.setAttribute('width',it.w*scale);
+    rect.setAttribute('height',it.d*scale);
+    rect.setAttribute('rx',Math.min(12,Math.max(3,8*scale)));
+    rect.setAttribute('fill',it.color);
+    rect.setAttribute('class','furniture'+(it.id===state.selected?' selected':''));
+    g.appendChild(rect);
+
+    const txt=document.createElementNS(ns,'text');
+    txt.setAttribute('class','label');
+    txt.setAttribute('transform',`rotate(${-it.rot})`);
+    txt.textContent=it.name;
+    g.appendChild(txt);
+
+    const ms=document.createElementNS(ns,'text');
+    ms.setAttribute('class','measure');
+    ms.setAttribute('y',22);
+    ms.setAttribute('transform',`rotate(${-it.rot})`);
+    ms.textContent=`${it.w}×${it.d}`;
+    g.appendChild(ms);
+
+    g.addEventListener('pointerdown', e=>startDrag(e,it.id));
+    g.addEventListener('click',()=>{state.selected=it.id; renderAll();});
+    svg.appendChild(g);
+  });
+}
+
+
+
+let doorDrag=null;
+
+function startDoorDrag(e,id){
+  e.preventDefault();
+  e.stopPropagation();
+
+  state.selectedDoor=id;
+  const door=selectedDoor();
+  if(!door) return;
+
+  // 跟家具 startDrag() 完全相同的概念：
+  // 記錄手指按下位置與物件中心的偏移量，之後直接跟著 pointermove。
+  const p=pointerToRoom(e);
+  const wp=doorWorldPos(door);
+
+  doorDrag={
+    id,
+    dx:p.x-wp.x,
+    dy:p.y-wp.y,
+    pid:e.pointerId
+  };
+
+  svg.setPointerCapture?.(e.pointerId);
+  syncDoorEditor();
+  render2D();
+}
+
+let vertexDrag=null;
+function startVertexDrag(e,index){
+  if(!state.roomEditing)return;
+  e.preventDefault(); e.stopPropagation();
+  state.selectedVertex=index;
+  const p=pointerToRoom(e);
+  const pt=state.room.points[index];
+  vertexDrag={index,dx:p.x-pt[0],dy:p.y-pt[1],pid:e.pointerId};
+  svg.setPointerCapture?.(e.pointerId);
+  render2D();
+}
+
+let drag=null;
+function pointerToRoom(e){
+  const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+  const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+  const {scale,ox,oy}=roomViewBox();
+  return {x:(p.x-ox)/scale,y:(p.y-oy)/scale};
+}
+function startDrag(e,id){
+  e.preventDefault();
+  state.selected=id;
+  const it=selectedItem();
+  const p=pointerToRoom(e);
+  drag={id,dx:p.x-it.x,dy:p.y-it.y,pid:e.pointerId};
+  svg.setPointerCapture?.(e.pointerId);
+  renderAll();
+}
+
+svg.addEventListener('pointermove',e=>{
+  if(doorDrag){
+    const door=selectedDoor();
+    if(!door) return;
+
+    const p=pointerToRoom(e);
+
+    // 跟家具一樣：手指位置扣掉按下時的偏移量，就是物件欲移動到的位置。
+    const targetX=p.x-doorDrag.dx;
+    const targetY=p.y-doorDrag.dy;
+
+    // 房門仍需附著在牆上，因此把目標中心投影到最近的牆段。
+    const edges=getRoomEdges();
+    let best=null;
+    let bestDist=Infinity;
+
+    edges.forEach(ed=>{
+      const q=nearestPointOnSegment(targetX,targetY,ed.a,ed.b);
+      const dist=Math.hypot(targetX-q.x,targetY-q.y);
+      if(dist<bestDist){
+        bestDist=dist;
+        best={edge:ed,q};
+      }
+    });
+
+    if(best){
+      door.edgeIndex=best.edge.index;
+      const edgeLen=edgeLength(best.edge);
+      const halfT=Math.min(.49,(door.w/2)/Math.max(edgeLen,1));
+      door.t=clamp(best.q.t,halfT,1-halfT);
+    }
+
+    render2D();
+    return;
+  }
+  if(vertexDrag){
+    const p=pointerToRoom(e);
+    const i=vertexDrag.index;
+    const nx=Math.max(0,Math.min(3000,p.x-vertexDrag.dx));
+    const ny=Math.max(0,Math.min(3000,p.y-vertexDrag.dy));
+    state.room.points[i]=[Math.round(nx),Math.round(ny)];
+    // 拖曳期間即時更新顯示範圍與尺寸
+    updateRoomBoundsFromPoints();
+    render2D();
+    updateStatus();
+    return;
+  }
+  if(!drag) return;
+  const it=selectedItem(); if(!it) return;
+  const p=pointerToRoom(e);
+  const rad=it.rot*Math.PI/180;
+  const ex=Math.abs(Math.cos(rad))*it.w/2+Math.abs(Math.sin(rad))*it.d/2;
+  const ey=Math.abs(Math.sin(rad))*it.w/2+Math.abs(Math.cos(rad))*it.d/2;
+  const nx=clamp(p.x-drag.dx,ex,state.room.w-ex);
+  const ny=clamp(p.y-drag.dy,ey,state.room.d-ey);
+  if((state.room.type!=='custom' || pointInPolygon(nx,ny,state.room.points)) &&
+     !furnitureWouldOverlap(it,nx,ny,it.rot,it.w,it.d,it.allowOverlap)){
+    it.x=nx; it.y=ny;
+  }else{
+    collisionFeedback();
+  }
+  render2D(); renderList(); syncEditor(); updateStatus();
+});
+function endDrag(e){
+  drag=null;
+  vertexDrag=null;
+  doorDrag=null;
+  if(state.room.type==='custom') updateRoomBoundsFromPoints();
+}
+svg.addEventListener('pointerup',endDrag);
+svg.addEventListener('pointercancel',endDrag);
+
+window.addEventListener('pointerup',e=>{
+  if(doorDrag && e.pointerId===doorDrag.pid){
+    endDrag(e);
+  }
+},{passive:false});
+window.addEventListener('pointercancel',e=>{
+  if(doorDrag && e.pointerId===doorDrag.pid){
+    endDrag(e);
+  }
+},{passive:false});
+
+function renderList(){
+  const wrap=$('furnitureList'); wrap.innerHTML='';
+  if(!state.items.length){
+    wrap.innerHTML='<div style="font-size:12px;color:#667085">尚未新增家具</div>'; return;
+  }
+  state.items.forEach(it=>{
+    const d=document.createElement('button');
+    d.type='button';
+    d.className='item'+(it.id===state.selected?' selected':'');
+    d.innerHTML=`<div><div class="name">${it.name}${it.allowOverlap?'<span class="overlap-badge">可重疊</span>':''}</div><div class="meta">${it.w}×${it.d}×${it.h} cm · ${Math.round(it.rot)}°</div></div><div>›</div>`;
+    d.addEventListener('click',()=>{state.selected=it.id; renderAll();});
+    wrap.appendChild(d);
+  });
+}
+
+function syncEditor(){
+  const it=selectedItem();
+  const ids=['eName','eW','eD','eH'];
+  ids.forEach(id=>$(id).disabled=!it);
+  $('eAllowOverlap').disabled=!it;
+  $('updateSelected').disabled=!it; $('deleteSelected').disabled=!it;
+  if(!it){
+    ids.forEach(id=>$(id).value='');
+    $('eAllowOverlap').checked=false;
+    return;
+  }
+  $('eName').value=it.name; $('eW').value=it.w; $('eD').value=it.d; $('eH').value=it.h;
+  $('eAllowOverlap').checked=it.allowOverlap===true;
+}
+
+function updateStatus(){
+  const it=selectedItem();
+  $('statusText').textContent=it?`${it.name}｜${it.w}×${it.d}×${it.h} cm｜X ${Math.round(it.x)} / Y ${Math.round(it.y)}｜${Math.round(it.rot)}°`:'未選取家具';
+}
+
+function renderAll(){
+  const roomCard=document.querySelector('.roomtype-card[data-roomtype="rect"] small');
+  if(roomCard) roomCard.textContent=`矩形 ${Math.round(state.room.w)} × ${Math.round(state.room.d)} cm`;
+  const customCard=document.querySelector('.roomtype-card[data-roomtype="custom"] small');
+  if(customCard && state.room.type==='custom') customCard.textContent=`拖曳編輯 · ${state.room.points.length} 個角點`;
+  render2D(); renderList(); syncEditor(); updateStatus();
+  if(state.mode==='3d' && three) update3D();
+}
+
+let audioCtx=null;
+function playFurnitureSound(){
+  try{
+    audioCtx ||= new (window.AudioContext||window.webkitAudioContext)();
+    const now=audioCtx.currentTime;
+    const osc=audioCtx.createOscillator();
+    const gain=audioCtx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(540,now);
+    osc.frequency.exponentialRampToValueAtTime(720,now+.07);
+    gain.gain.setValueAtTime(.0001,now);
+    gain.gain.exponentialRampToValueAtTime(.09,now+.01);
+    gain.gain.exponentialRampToValueAtTime(.0001,now+.12);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(now); osc.stop(now+.13);
+  }catch(e){}
+}
+function furnitureFeedback(btn,name){
+  document.querySelectorAll('.preset.flash').forEach(b=>b.classList.remove('flash'));
+  btn.classList.add('flash');
+  setTimeout(()=>btn.classList.remove('flash'),260);
+  playFurnitureSound();
+  const t=$('soundToast');
+  t.textContent=`🔊 已加入：${name}`;
+  t.classList.add('show');
+  clearTimeout(furnitureFeedback.timer);
+  furnitureFeedback.timer=setTimeout(()=>t.classList.remove('show'),850);
+}
+document.querySelectorAll('[data-preset]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const p=presets[btn.dataset.preset];
+    addFurniture(p);
+    furnitureFeedback(btn,p.name);
+  });
+});
+$('addCustom').addEventListener('click',()=>addFurniture({
+  name:$('fName').value.trim()||'家具',
+  w:+$('fW').value,d:+$('fD').value,h:+$('fH').value,color:$('fColor').value,
+  allowOverlap:$('fAllowOverlap').checked
+}));
+
+$('applyRoom').addEventListener('click',()=>{
+  state.room.w=clamp(+$('roomW').value||400,100,3000);
+  state.room.d=clamp(+$('roomD').value||500,100,3000);
+  state.room.h=clamp(+$('roomH').value||280,180,600);
+  if(state.room.type==='rect'){
+    state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+  }
+  state.items.forEach(it=>{
+    it.x=clamp(it.x,it.w/2,Math.max(it.w/2,state.room.w-it.w/2));
+    it.y=clamp(it.y,it.d/2,Math.max(it.d/2,state.room.d-it.d/2));
+  });
+  renderAll();
+});
+
+$('updateSelected').addEventListener('click',()=>{
+  const it=selectedItem(); if(!it) return;
+
+  const newName=$('eName').value.trim()||'家具';
+  const newW=clamp(+$('eW').value||it.w,10,1000);
+  const newD=clamp(+$('eD').value||it.d,10,1000);
+  const newH=clamp(+$('eH').value||it.h,5,500);
+  const newAllow=$('eAllowOverlap').checked;
+
+  if(!newAllow && furnitureWouldOverlap(it,it.x,it.y,it.rot,newW,newD,false)){
+    alert('更新後會與其他不可重疊家具重疊。請調整尺寸／位置，或明確勾選「允許與其他家具重疊」。');
+    syncEditor();
+    return;
+  }
+
+  it.name=newName;
+  it.w=newW; it.d=newD; it.h=newH;
+  it.allowOverlap=newAllow;
+  renderAll();
+});
+$('deleteSelected').addEventListener('click',()=>{
+  if(!state.selected)return;
+  state.items=state.items.filter(x=>x.id!==state.selected);
+  state.selected=state.items.at(-1)?.id||null;
+  renderAll();
+});
+function rotate(deg){
+  const it=selectedItem(); if(!it)return;
+  const next=(it.rot+deg+360)%360;
+  const rad=next*Math.PI/180;
+  const ex=Math.abs(Math.cos(rad))*it.w/2+Math.abs(Math.sin(rad))*it.d/2;
+  const ey=Math.abs(Math.sin(rad))*it.w/2+Math.abs(Math.cos(rad))*it.d/2;
+
+  if(it.x<ex || it.x>state.room.w-ex || it.y<ey || it.y>state.room.d-ey ||
+     furnitureWouldOverlap(it,it.x,it.y,next,it.w,it.d,it.allowOverlap)){
+    collisionFeedback();
+    return;
+  }
+  it.rot=next;
+  renderAll();
+}
+$('rotateLeft').addEventListener('click',()=>rotate(-15));
+$('rotateRight').addEventListener('click',()=>rotate(15));
+$('duplicate').addEventListener('click',()=>{
+  const it=selectedItem(); if(!it)return;
+  const n={...it,id:makeId(),name:it.name+' 複本',x:it.x,y:it.y};
+  const free=findFreePosition(n);
+  if(!free && !n.allowOverlap){
+    alert('找不到可放置複本且不重疊的位置。');
+    return;
+  }
+  if(free){n.x=free.x;n.y=free.y;}
+  state.items.push(n); state.selected=n.id; renderAll();
+});
+$('centerObj').addEventListener('click',()=>{
+  const it=selectedItem(); if(!it)return;
+  const x=state.room.w/2,y=state.room.d/2;
+  if(furnitureWouldOverlap(it,x,y,it.rot,it.w,it.d,it.allowOverlap)){
+    collisionFeedback();
+    alert('房間中央已有其他不可重疊家具。');
+    return;
+  }
+  it.x=x;it.y=y;renderAll();
+});
+
+$('saveBtn').addEventListener('click',()=>{
+  const data=JSON.stringify({room:state.room,items:state.items,seq:state.seq,doors:state.doors,doorSeq:state.doorSeq});
+  const blob=new Blob([data],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='room-layout.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+});
+$('loadBtn').addEventListener('click',()=>{
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+  inp.addEventListener('change',()=>{
+    const f=inp.files?.[0]; if(!f)return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const o=JSON.parse(r.result);
+        if(!o.room||!Array.isArray(o.items))throw new Error();
+        state.room=o.room;
+        state.room.type=state.room.type||'rect';
+        state.room.points=state.room.points||[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+        state.items=o.items.map(it=>({...it,allowOverlap:it.allowOverlap===true})); state.seq=o.seq||100; state.selected=state.items[0]?.id||null;
+        state.doors=Array.isArray(o.doors)?o.doors:[]; state.doorSeq=o.doorSeq||100; state.selectedDoor=state.doors[0]?.id||null;
+        $('roomW').value=state.room.w;$('roomD').value=state.room.d;$('roomH').value=state.room.h;
+        renderAll();
+      }catch{alert('這不是有效的配置檔');}
+    };
+    r.readAsText(f);
+  });
+  inp.click();
+});
+
+$('printBtn').addEventListener('click',()=>{
+  // 瀏覽器列印視窗可直接選「另存為 PDF」
+  const was3d=state.mode==='3d';
+  if(was3d){
+    state.mode='2d';
+    $('planView').style.display='block';
+    $('view3d').style.display='none';
+    render2D();
+  }
+  setTimeout(()=>{
+    window.print();
+    if(was3d){
+      state.mode='3d';
+      $('planView').style.display='none';
+      $('view3d').style.display='block';
+    }
+  },80);
+});
+
+
+$('roomTypeBtn').addEventListener('click',()=>{
+  $('roomTypePanel').classList.add('open');
+});
+$('closeRoomType').addEventListener('click',()=>{
+  $('roomTypePanel').classList.remove('open');
+});
+document.querySelectorAll('.roomtype-card').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.roomtype-card').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const type=btn.dataset.roomtype;
+    $('customShapeBox').classList.toggle('show',type==='custom');
+    if(type==='rect'){
+      state.room.type='rect';
+      state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+      state.roomEditing=false;
+      $('roomEditBanner').classList.remove('show');
+      renderAll();
+    }else{
+      state.room.type='custom';
+      if(!state.room.points || state.room.points.length<3){
+        state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+      }
+    }
+  });
+});
+
+const shapePresets={
+  RECT:[[0,0],[400,0],[400,500],[0,500]],
+  L:[[0,0],[400,0],[400,220],[250,220],[250,500],[0,500]],
+  U:[[0,0],[400,0],[400,500],[280,500],[280,180],[120,180],[120,500],[0,500]]
+};
+
+function applyPresetShape(key){
+  state.room.type = key==='RECT' ? 'rect' : 'custom';
+  state.room.points = shapePresets[key].map(p=>[...p]);
+  updateRoomBoundsFromPoints();
+  state.selectedVertex=null;
+  document.querySelectorAll('.roomtype-card').forEach(b=>
+    b.classList.toggle('active', b.dataset.roomtype === (state.room.type==='rect'?'rect':'custom'))
+  );
+  $('customShapeBox').classList.toggle('show',state.room.type==='custom');
+  renderAll();
+}
+
+document.querySelectorAll('.shapePreset').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    applyPresetShape(btn.dataset.shape);
+    if(btn.dataset.shape!=='RECT'){
+      startRoomEditing();
+    }
+  });
+});
+
+function startRoomEditing(){
+  if(state.room.type!=='custom'){
+    state.room.type='custom';
+    state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+  }
+  state.roomEditing=true;
+  state.mode='2d';
+  $('planView').style.display='block';
+  $('view3d').style.display='none';
+  $('btn2d').classList.add('active');
+  $('btn3d').classList.remove('active');
+  $('roomEditBanner').classList.add('show');
+  $('roomTypePanel').classList.remove('open');
+  $('shapeMsg').textContent='房型編輯已開啟，直接拖曳角點。';
+  renderAll();
+}
+function finishRoomEditing(){
+  state.roomEditing=false;
+  state.selectedVertex=null;
+  $('roomEditBanner').classList.remove('show');
+  updateRoomBoundsFromPoints();
+  state.items.forEach(it=>{
+    if(!pointInPolygon(it.x,it.y,state.room.points)){
+      it.x=state.room.w/2; it.y=state.room.d/2;
+    }
+  });
+  renderAll();
+}
+$('startRoomEdit').addEventListener('click',startRoomEditing);
+$('finishRoomEdit').addEventListener('click',finishRoomEditing);
+
+$('addRoomVertex').addEventListener('click',()=>{
+  if(state.room.type!=='custom'){
+    state.room.type='custom';
+    state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+  }
+  let bestI=0,bestLen=-1;
+  const pts=state.room.points;
+  for(let i=0;i<pts.length;i++){
+    const a=pts[i],b=pts[(i+1)%pts.length];
+    const len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    if(len>bestLen){bestLen=len;bestI=i;}
+  }
+  const a=pts[bestI],b=pts[(bestI+1)%pts.length];
+  const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  pts.splice(bestI+1,0,mid);
+  state.selectedVertex=bestI+1;
+  startRoomEditing();
+  renderAll();
+});
+
+$('removeRoomVertex').addEventListener('click',()=>{
+  if(state.room.type!=='custom' || state.room.points.length<=3){
+    $('shapeMsg').textContent='房型至少需要 3 個角點。';
+    return;
+  }
+  if(state.selectedVertex==null){
+    $('shapeMsg').textContent='請先在 2D 圖點選一個藍色角點。';
+    return;
+  }
+  state.room.points.splice(state.selectedVertex,1);
+  state.selectedVertex=null;
+  updateRoomBoundsFromPoints();
+  renderAll();
+});
+
+$('resetShape').addEventListener('click',()=>{
+  state.room.type='rect';
+  state.room.points=[[0,0],[state.room.w,0],[state.room.w,state.room.d],[0,state.room.d]];
+  state.roomEditing=false;
+  state.selectedVertex=null;
+  $('roomEditBanner').classList.remove('show');
+  $('customShapeBox').classList.remove('show');
+  document.querySelectorAll('.roomtype-card').forEach(b=>b.classList.toggle('active',b.dataset.roomtype==='rect'));
+  $('shapeMsg').textContent='已還原目前矩形房型。';
+  renderAll();
+});
+
+
+
+function syncDoorEditor(){
+  const d=selectedDoor();
+  if(!d)return;
+  $('doorW').value=d.w;
+  $('doorH').value=d.h;
+  $('doorT').value=d.tickness;
+  $('doorSwing').value=d.swing;
+}
+$('doorBtn').addEventListener('click',()=>{
+  $('doorPanel').classList.add('open');
+  syncDoorEditor();
+});
+$('closeDoorPanel').addEventListener('click',()=>{
+  $('doorPanel').classList.remove('open');
+});
+$('addDoor').addEventListener('click',()=>{
+  const edges=getRoomEdges();
+  const edge=edges[0];
+  const d={
+    id:makeDoorId(),
+    w:clamp(+$('doorW').value||90,50,200),
+    h:clamp(+$('doorH').value||210,160,260),
+    tickness:clamp(+$('doorT').value||10,5,30),
+    swing:$('doorSwing').value||'in-left',
+    edgeIndex:0,
+    t:.5
+  };
+  state.doors.push(d);
+  state.selectedDoor=d.id;
+  $('doorMsg').textContent='已新增房門，可直接在 2D 圖拖曳到其他牆面。';
+  renderAll();
+});
+$('deleteDoor').addEventListener('click',()=>{
+  if(!state.selectedDoor){
+    $('doorMsg').textContent='請先選取房門。';
+    return;
+  }
+  state.doors=state.doors.filter(d=>d.id!==state.selectedDoor);
+  state.selectedDoor=state.doors.at(-1)?.id||null;
+  $('doorMsg').textContent='已刪除房門。';
+  renderAll();
+});
+['doorW','doorH','doorT','doorSwing'].forEach(id=>{
+  $(id).addEventListener('change',()=>{
+    const d=selectedDoor();
+    if(!d)return;
+    d.w=clamp(+$('doorW').value||d.w,50,200);
+    d.h=clamp(+$('doorH').value||d.h,160,260);
+    d.tickness=clamp(+$('doorT').value||d.tickness,5,30);
+    d.swing=$('doorSwing').value;
+    renderAll();
+  });
+});
+
+$('panelBtn').addEventListener('click',()=>sidebar.classList.toggle('open'));
+$('backMainBtn').addEventListener('click',()=>{
+  sidebar.classList.remove('open');
+});
+
+$('btn2d').addEventListener('click',()=>{
+  state.mode='2d'; $('planView').style.display='block'; $('view3d').style.display='none';
+  $('btn2d').classList.add('active'); $('btn3d').classList.remove('active');
+  $('helpText').textContent='2D：拖曳家具移動；點家具後可用上方 ±15° 旋轉。手機可直接觸控拖曳。';
+});
+$('btn3d').addEventListener('click',async()=>{
+  state.mode='3d'; $('planView').style.display='none'; $('view3d').style.display='block';
+  $('btn3d').classList.add('active'); $('btn2d').classList.remove('active');
+  $('helpText').textContent='3D：單指/滑鼠左鍵旋轉視角；雙指縮放與平移；滾輪可縮放。';
+  await init3D(); update3D();
+});
+
+async function init3D(){
+  if(three)return;
+  try{
+    const THREE=await import('https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js');
+    const {OrbitControls}=await import('https://cdn.jsdelivr.net/npm/three@0.167.1/examples/jsm/controls/OrbitControls.js');
+    const canvas=$('threeCanvas');
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+    renderer.shadowMap.enabled=true;
+    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.setClearColor(0xe6eaee);
+
+    const scene=new THREE.Scene();
+    const camera=new THREE.PerspectiveCamera(48,1,1,10000);
+    const controls=new OrbitControls(camera,renderer.domElement);
+    controls.enableDamping=true;
+    controls.dampingFactor=.07;
+    controls.minDistance=150;
+    controls.maxDistance=3000;
+    controls.maxPolarAngle=Math.PI/2-0.02;
+    controls.target.set(0,60,0);
+
+    const hemi=new THREE.HemisphereLight(0xffffff,0x6f7780,1.7); scene.add(hemi);
+    const sun=new THREE.DirectionalLight(0xffffff,2.1);
+    sun.position.set(-300,500,250);sun.castShadow=true;
+    sun.shadow.mapSize.set(2048,2048);
+    scene.add(sun);
+
+    const root=new THREE.Group(); scene.add(root);
+    three={THREE,renderer,scene,camera,controls,root,lastKey:''};
+
+    function resize(){
+      const r=$('view3d').getBoundingClientRect();
+      if(!r.width||!r.height)return;
+      renderer.setSize(r.width,r.height,false);
+      camera.aspect=r.width/r.height;camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe($('view3d'));
+    resize();
+
+    (function loop(){
+      controls.update();renderer.render(scene,camera);requestAnimationFrame(loop);
+    })();
+  }catch(err){
+    $('helpText').textContent='3D 模組載入失敗。請確認目前有網路連線後再切換 3D。';
+    console.error(err);
+  }
+}
+
+function update3D(){
+  if(!three)return;
+  const {THREE,root,camera,controls}=three;
+  while(root.children.length){
+    const o=root.children.pop();
+    o.traverse?.(n=>{n.geometry?.dispose?.(); if(n.material){if(Array.isArray(n.material))n.material.forEach(m=>m.dispose?.());else n.material.dispose?.();}});
+  }
+  const W=state.room.w,D=state.room.d,H=state.room.h;
+
+  const floorMat=new THREE.MeshStandardMaterial({color:0xd8c7a8,roughness:.88,metalness:0});
+  const wallMat=new THREE.MeshStandardMaterial({color:0xf1f3f4,roughness:.92,side:THREE.DoubleSide});
+
+  if(state.room.type==='custom' && Array.isArray(state.room.points) && state.room.points.length>=3){
+    const shape=new THREE.Shape();
+    state.room.points.forEach(([x,y],i)=>{
+      const px=x-W/2, pz=y-D/2;
+      if(i===0) shape.moveTo(px,pz); else shape.lineTo(px,pz);
+    });
+    shape.closePath();
+    const geo=new THREE.ExtrudeGeometry(shape,{depth:5,bevelEnabled:false});
+    geo.rotateX(Math.PI/2);
+    const floor=new THREE.Mesh(geo,floorMat);
+    floor.position.y=0; floor.receiveShadow=true; root.add(floor);
+
+    const pts=state.room.points;
+    for(let i=0;i<pts.length;i++){
+      const a=pts[i], b=pts[(i+1)%pts.length];
+      const ax=a[0]-W/2, az=a[1]-D/2;
+      const bx=b[0]-W/2, bz=b[1]-D/2;
+      const dx=bx-ax, dz=bz-az, len=Math.hypot(dx,dz);
+      const wall=new THREE.Mesh(new THREE.BoxGeometry(len,H,6),wallMat);
+      wall.position.set((ax+bx)/2,H/2,(az+bz)/2);
+      wall.rotation.y=-Math.atan2(dz,dx);
+      wall.receiveShadow=true; root.add(wall);
+    }
+  }else{
+    const floor=new THREE.Mesh(new THREE.BoxGeometry(W,5,D),floorMat);
+    floor.position.y=-2.5;floor.receiveShadow=true;root.add(floor);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(W,H,6),wallMat);
+    back.position.set(0,H/2,-D/2);back.receiveShadow=true;root.add(back);
+    const left=new THREE.Mesh(new THREE.BoxGeometry(6,H,D),wallMat);
+    left.position.set(-W/2,H/2,0);left.receiveShadow=true;root.add(left);
+  }
+
+  const grid=new THREE.GridHelper(Math.max(W,D),Math.max(4,Math.round(Math.max(W,D)/50)),0x7f8a94,0xb1b8bf);
+  grid.position.y=.2;root.add(grid);
+
+
+  // 3D 房門
+  state.doors.forEach(door=>{
+    const p=doorWorldPos(door);
+    const e=p.edge;
+    const ang=p.angle;
+    const cx=p.x-W/2, cz=p.y-D/2;
+    const doorMat=new THREE.MeshStandardMaterial({color:0x9b8c7d,roughness:.72});
+    const frameMat=new THREE.MeshStandardMaterial({color:0x6d7472,roughness:.78});
+
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(door.w,door.h,Math.max(4,door.tickness)),frameMat);
+    frame.position.set(cx,door.h/2,cz);
+    frame.rotation.y=-ang;
+    frame.castShadow=true; frame.receiveShadow=true;
+    root.add(frame);
+
+    const leaf=new THREE.Mesh(new THREE.BoxGeometry(Math.max(4,door.w-8),Math.max(4,door.h-8),4),doorMat);
+    leaf.position.set(cx,door.h/2,cz);
+    leaf.rotation.y=-ang;
+    leaf.castShadow=true;
+    root.add(leaf);
+  });
+
+  state.items.forEach(it=>{
+    const mat=new THREE.MeshStandardMaterial({color:new THREE.Color(it.color),roughness:.62,metalness:.04});
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(it.w,it.h,it.d),mat);
+    mesh.position.set(it.x-W/2,it.h/2,it.y-D/2);
+    mesh.rotation.y=-THREE.MathUtils.degToRad(it.rot);
+    mesh.castShadow=true;mesh.receiveShadow=true;
+    root.add(mesh);
+
+    // subtle top inset to improve realism
+    const topMat=new THREE.MeshStandardMaterial({color:new THREE.Color(it.color).offsetHSL(0,0,.05),roughness:.7});
+    const top=new THREE.Mesh(new THREE.BoxGeometry(Math.max(4,it.w-4),2,Math.max(4,it.d-4)),topMat);
+    top.position.set(it.x-W/2,it.h+1,it.y-D/2);
+    top.rotation.y=-THREE.MathUtils.degToRad(it.rot);
+    top.castShadow=true;root.add(top);
+  });
+
+  const max=Math.max(W,D);
+  camera.position.set(max*.85,Math.max(H*1.1,max*.65),max*.85);
+  controls.target.set(0,Math.min(H*.3,90),0);
+  controls.update();
+}
+
+renderAll();
+
+let renderTimer=null;
+function schedule2DRender(){
+  clearTimeout(renderTimer);
+  renderTimer=setTimeout(()=>{
+    if(state.mode==='2d') render2D();
+    if(state.mode==='3d' && three) update3D();
+  },60);
+}
+window.addEventListener('resize',schedule2DRender);
+window.addEventListener('orientationchange',schedule2DRender);
+requestAnimationFrame(()=>{
+  renderAll();
+  setTimeout(renderAll,120);
+});
+</script>
+</body>
+</html>
