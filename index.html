@@ -1820,13 +1820,30 @@ $('centerObj').addEventListener('click',()=>{
 });
 
 $('saveBtn').addEventListener('click',()=>{
-  const data=JSON.stringify({room:state.room,items:state.items,seq:state.seq,doors:state.doors,doorSeq:state.doorSeq});
+  const defaultName=`房間配置_${new Date().toLocaleDateString('zh-TW').replaceAll('/','-')}`;
+  let name=prompt('請輸入配置名稱：',defaultName);
+  if(name===null)return;
+  name=name.trim()||defaultName;
+  name=name.replace(/[\\/:*?"<>|]/g,'_');
+  if(!name.toLowerCase().endsWith('.json')) name+='.json';
+
+  const data=JSON.stringify({
+    version:23,
+    layoutName:name.replace(/\.json$/i,''),
+    savedAt:new Date().toISOString(),
+    room:state.room,items:state.items,seq:state.seq,
+    doors:state.doors,doorSeq:state.doorSeq
+  },null,2);
+
   const blob=new Blob([data],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='room-layout.json';
+  a.download=name;
+  document.body.appendChild(a);
   a.click();
+  a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  $('helpText').textContent=`已儲存配置：${name}`;
 });
 $('loadBtn').addEventListener('click',()=>{
   const inp=document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
@@ -1844,6 +1861,8 @@ $('loadBtn').addEventListener('click',()=>{
         state.doors=Array.isArray(o.doors)?o.doors:[]; state.doorSeq=o.doorSeq||100; state.selectedDoor=state.doors[0]?.id||null;
         $('roomW').value=state.room.w;$('roomD').value=state.room.d;$('roomH').value=state.room.h;
         renderAll();
+        const loadedName=o.layoutName||f.name.replace(/\.json$/i,'');
+        $('helpText').textContent=`已載入配置：${loadedName}`;
       }catch{alert('這不是有效的配置檔');}
     };
     r.readAsText(f);
