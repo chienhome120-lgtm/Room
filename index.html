@@ -1172,12 +1172,33 @@ input,select{
   }
 }
 
+
+/* v33：第一列 280 與 400 同粗；返回主畫面按鈕加深 */
+#roomH{
+  font-weight:700 !important;
+}
+
+/* 目前專案中的返回主畫面按鈕 */
+#backMainBtn{
+  background:linear-gradient(180deg,#8f8177 0%,#75675e 52%,#645850 100%) !important;
+  color:#fff !important;
+  border-color:#5d514a !important;
+  box-shadow:
+    0 5px 12px rgba(59,47,39,.22),
+    inset 0 1px 0 rgba(255,255,255,.16) !important;
+  text-shadow:0 1px 1px rgba(0,0,0,.24) !important;
+  font-weight:700 !important;
+}
+#backMainBtn:active{
+  background:linear-gradient(180deg,#75675e,#5e524b) !important;
+}
+
 </style>
 </head>
 <body>
 <div id="app">
   <div class="topbar">
-    <div class="brand">🏠 3D 房間家具擺設</div>
+    <div class="brand">🏠 3D 房間家具擺設 簡建鴻</div>
     <button class="btn mobile-panel-btn" id="panelBtn">☰ 家具</button>
     <div class="pill"><label>房間寬</label><input id="roomW" type="number" min="100" max="3000" step="10" value="400"><span>cm</span></div>
     <div class="pill"><label>房間深</label><input id="roomD" type="number" min="100" max="3000" step="10" value="500"><span>cm</span></div>
