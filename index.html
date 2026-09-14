@@ -1193,12 +1193,29 @@ input,select{
   background:linear-gradient(180deg,#75675e,#5e524b) !important;
 }
 
+
+/* v34 新手引導 */
+.onboarding-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(42,36,31,.55)}
+.onboarding-overlay.hidden,.guide-panel.hidden,.guide-dim.hidden{display:none!important}
+.onboarding-card{width:min(560px,100%);max-height:92vh;overflow:auto;border-radius:22px;padding:22px;background:linear-gradient(155deg,#fcfaf7,#e1d9d0);border:1px solid rgba(90,72,58,.2);box-shadow:0 22px 60px rgba(35,28,23,.28)}
+.onboarding-card h2{margin:0 0 8px;font-size:25px}.onboarding-card p{color:#71675f;line-height:1.7}
+.onboarding-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.onboarding-choice{min-height:130px!important;border-radius:16px!important;padding:16px!important;text-align:left}
+.onboarding-choice strong{font-size:18px;display:block}.onboarding-choice small{font-size:13px;line-height:1.5;color:#746a62}
+.choice-icon{font-size:30px;display:block;margin-bottom:8px}
+.guide-dim{position:fixed;inset:0;z-index:10000;background:rgba(34,29,25,.18);pointer-events:none}
+.guide-panel{position:fixed;z-index:10002;width:min(430px,calc(100vw - 24px));left:50%;bottom:12px;transform:translateX(-50%);padding:16px;border-radius:18px;background:linear-gradient(155deg,#fcfaf7,#ddd4ca);border:1px solid rgba(79,64,53,.22);box-shadow:0 18px 46px rgba(43,34,28,.28)}
+.guide-panel h3{margin:5px 0 7px;font-size:20px}.guide-panel p{margin:0 0 12px;color:#675e57;font-size:14px;line-height:1.65}
+.guide-step-count{font-size:12px;font-weight:800;color:#83766c}.guide-actions{display:flex;gap:8px;flex-wrap:wrap}.guide-skip{margin-right:auto}
+.guide-highlight{position:relative!important;z-index:10001!important;outline:4px solid rgba(124,101,83,.78)!important;outline-offset:4px!important;box-shadow:0 0 0 8px rgba(255,255,255,.8),0 12px 28px rgba(63,49,39,.28)!important}
+@media(max-width:620px){.onboarding-choice-grid{grid-template-columns:1fr}.onboarding-choice{min-height:105px!important}.guide-panel{bottom:8px}}
+
 </style>
 </head>
 <body>
 <div id="app">
   <div class="topbar">
-    <div class="brand">🏠 3D 房間家具擺設 簡建鴻</div>
+    <div class="brand">🏠 3D 房間家具擺設</div>
     <button class="btn mobile-panel-btn" id="panelBtn">☰ 家具</button>
     <div class="pill"><label>房間寬</label><input id="roomW" type="number" min="100" max="3000" step="10" value="400"><span>cm</span></div>
     <div class="pill"><label>房間深</label><input id="roomD" type="number" min="100" max="3000" step="10" value="500"><span>cm</span></div>
@@ -2990,6 +3007,70 @@ requestAnimationFrame(()=>{
   renderAll();
   setTimeout(renderAll,120);
 });
+
+(function(){
+ const $g=id=>document.getElementById(id);
+ const steps=[
+  ['.topbar','設定房間尺寸','先輸入牆高、房間寬、房間深，再按「套用房間」。'],
+  ['#roomTypeBtn','選擇房型','按「房型」選擇矩形、自訂、L 型或 U 型房間。'],
+  ['#doorBtn','加入房門','按「房門」設定門寬、門高、開門方向，新增後可沿牆拖曳。'],
+  ['#panelBtn','打開家具選單','按「家具」開啟快速新增家具。'],
+  ['#sidebar','新增家具','可加入床、沙發、餐桌、書桌、衣櫃、櫃子，也可自訂尺寸。'],
+  ['#planSvg','拖曳家具','直接拖曳家具到想要的位置；放手後會依重疊規則自動整理。'],
+  ['.floating','旋轉與複製','可用 ±15° 旋轉，也可以複製或置中家具。'],
+  ['#btn3d','查看 3D','按「3D 立體」檢查空間效果，可拖曳旋轉視角。'],
+  ['#saveBtn','儲存配置','完成後按「儲存配置」，下次可用「載入配置」繼續編輯。']
+ ];
+ let i=0,hi=null;
+ const overlay=$g('onboardingOverlay'),panel=$g('guidePanel'),dim=$g('guideDim');
+ function clear(){if(hi){hi.classList.remove('guide-highlight');hi=null}}
+ function show(){
+  clear();
+  const s=steps[i],el=document.querySelector(s[0]);
+  $g('guideStepCount').textContent=`步驟 ${i+1} / ${steps.length}`;
+  $g('guideTitle').textContent=s[1];
+  $g('guideText').textContent=s[2];
+  $g('guidePrevBtn').disabled=i===0;
+  $g('guideNextBtn').textContent=i===steps.length-1?'完成引導':'下一步';
+  if(el){
+    hi=el;
+    if(el.id==='sidebar' && innerWidth<=800){el.classList.add('open');document.body.classList.add('sidebar-open')}
+    try{el.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}
+    setTimeout(()=>el.classList.add('guide-highlight'),150);
+  }
+ }
+ function start(){overlay.classList.add('hidden');panel.classList.remove('hidden');dim.classList.remove('hidden');i=0;show()}
+ function end(){clear();panel.classList.add('hidden');dim.classList.add('hidden')}
+ $g('startGuideBtn').addEventListener('click',start);
+ $g('directUseBtn').addEventListener('click',()=>overlay.classList.add('hidden'));
+ $g('guidePrevBtn').addEventListener('click',()=>{if(i>0){i--;show()}});
+ $g('guideNextBtn').addEventListener('click',()=>{if(i>=steps.length-1){end()}else{i++;show()}});
+ $g('guideSkipBtn').addEventListener('click',end);
+})();
+
 </script>
+
+<div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true">
+  <div class="onboarding-card">
+    <h2>🏠 歡迎使用 3D 房間家具擺設</h2>
+    <p>第一次使用也沒問題。請選擇要由系統一步一步帶著完成，或直接進入完整介面。</p>
+    <div class="onboarding-choice-grid">
+      <button type="button" class="onboarding-choice" id="startGuideBtn"><span class="choice-icon">🧭</span><strong>引導模式</strong><small>依序設定房間尺寸、房型、房門、家具、位置與 3D 檢視。</small></button>
+      <button type="button" class="onboarding-choice" id="directUseBtn"><span class="choice-icon">🛠️</span><strong>直接使用</strong><small>略過教學，直接使用所有功能。</small></button>
+    </div>
+  </div>
+</div>
+<div class="guide-dim hidden" id="guideDim"></div>
+<div class="guide-panel hidden" id="guidePanel">
+  <div class="guide-step-count" id="guideStepCount"></div>
+  <h3 id="guideTitle"></h3>
+  <p id="guideText"></p>
+  <div class="guide-actions">
+    <button class="btn guide-skip" type="button" id="guideSkipBtn">結束引導</button>
+    <button class="btn" type="button" id="guidePrevBtn">上一步</button>
+    <button class="btn" type="button" id="guideNextBtn">下一步</button>
+  </div>
+</div>
+
 </body>
 </html>
