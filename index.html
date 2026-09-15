@@ -1569,13 +1569,93 @@ input,select{
 }
 
 
-/* v47：家具長按刪除 */
-.longpress-delete-hint{
-  animation:longpressPulse .55s ease-in-out infinite alternate;
+to{filter:brightness(.78)}
 }
-@keyframes longpressPulse{
-  from{filter:brightness(1)}
-  to{filter:brightness(.78)}
+
+
+
+/* v49：長按家具 3 秒後啟用刪除鍵 */
+#centerObj.delete-armed{
+  background:linear-gradient(180deg,#f7b7ca,#e98fab 55%,#d87595)!important;
+  border-color:#c85d7e!important;
+  color:#fff!important;
+  box-shadow:0 5px 14px rgba(190,77,112,.32),inset 0 1px 0 rgba(255,255,255,.45)!important;
+  text-shadow:0 1px 1px rgba(110,40,62,.35)!important;
+}
+
+/* v51：家具欄新增窗戶 */
+#planSvg .window-item rect{
+  fill:#b8d0d5!important;
+  fill-opacity:.78!important;
+  stroke:#688a92!important;
+  stroke-width:3!important;
+}
+#planSvg .window-item text.label{
+  fill:#314f56!important;
+}
+
+
+/* v52：窗戶專用離地高度 */
+.window-sill-field{
+  border-radius:10px;
+  padding:7px;
+  background:rgba(169,193,199,.18);
+  border:1px solid rgba(104,138,146,.24);
+}
+.window-sill-field label{
+  color:#47656c!important;
+  font-weight:800!important;
+}
+
+
+/* v53：窗戶重疊選項即時生效 */
+.window-sill-field + .overlap-option{margin-top:8px}
+
+/* v54：窗戶重疊時維持最上層視覺 */
+#planSvg g[data-id].window-item,
+#planSvg .window-item{
+  opacity:1!important;
+}
+#planSvg .window-item rect{
+  filter:drop-shadow(0 2px 3px rgba(65,100,108,.28));
+}
+
+
+/* v56：所有「返回主畫面」統一放在各功能欄最下方 */
+.bottom-return-section{
+  margin-top:10px!important;
+  padding-top:12px!important;
+  padding-bottom:max(14px,env(safe-area-inset-bottom))!important;
+  border-top:1px solid rgba(93,81,74,.18);
+}
+.roomtype-bottom-return{
+  margin-top:16px;
+  padding:14px 0 max(12px,env(safe-area-inset-bottom));
+  border-top:1px solid rgba(93,81,74,.18);
+}
+.roomtype-bottom-return #closeRoomType{
+  width:100%;
+  min-height:48px;
+  font-weight:800!important;
+  background:linear-gradient(180deg,#8f8177 0%,#75675e 52%,#645850 100%)!important;
+  color:#fff!important;
+  border-color:#5d514a!important;
+}
+@media(max-width:620px){
+  #sidebar{padding-bottom:8px!important}
+  #roomTypePanel{padding-bottom:8px!important}
+}
+
+
+/* v58：家具前置房門提醒，定位後短暫強調房門設定區 */
+#doorPanel.door-attention{
+  animation:doorAttentionPulse .6s ease-in-out 3;
+  border-color:#a86f59!important;
+  box-shadow:0 0 0 4px rgba(168,111,89,.16),0 10px 24px rgba(70,52,42,.14)!important;
+}
+@keyframes doorAttentionPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(.992)}
 }
 
 </style>
@@ -1583,7 +1663,7 @@ input,select{
 <body>
 <div id="app">
   <div class="topbar">
-    <div class="brand">🏠 3D 房間家具擺設 Chien hung</div>
+    <div class="brand">🏠 3D 房間家具擺設</div>
     <button class="btn mobile-panel-btn" id="panelBtn">☰ 家具</button>
     <button class="btn mini-history-btn" id="furnitureUndoBtn" title="上一步" aria-label="上一步">↶</button>
     <button class="btn mini-history-btn" id="furnitureRedoBtn" title="下一步" aria-label="下一步">↷</button>
@@ -1601,9 +1681,6 @@ input,select{
 
   <div class="workspace">
     <aside class="sidebar" id="sidebar">
-      <div class="section mobile-back-section">
-        <button class="btn primary" id="backMainBtn" style="width:100%">← 返回主畫面</button>
-      </div>
       <div class="section">
         <h3>快速新增家具</h3>
         <div class="preset-grid">
@@ -1614,6 +1691,7 @@ input,select{
           <button class="preset" data-preset="desk">🖥️ 書桌 <span class="sound-dot"></span></button>
           <button class="preset" data-preset="wardrobe">🚪 衣櫃 <span class="sound-dot"></span></button>
           <button class="preset" data-preset="cabinet">🗄️ 櫃子 <span class="sound-dot"></span></button>
+          <button class="preset" data-preset="window">🪟 窗戶 <span class="sound-dot"></span></button>
         </div>
       </div>
 
@@ -1640,6 +1718,10 @@ input,select{
           <div class="field"><label>寬度 (cm)</label><input id="eW" type="number" disabled></div>
           <div class="field"><label>深度 (cm)</label><input id="eD" type="number" disabled></div>
           <div class="field"><label>高度 (cm)</label><input id="eH" type="number" disabled></div>
+          <div class="field window-sill-field" id="windowSillField" style="display:none">
+            <label>離地面高度 (cm)</label>
+            <input id="eSillH" type="number" min="0" max="500" value="90" disabled>
+          </div>
         </div>
         <label class="overlap-option edit-overlap">
           <input id="eAllowOverlap" type="checkbox" disabled>
@@ -1654,6 +1736,10 @@ input,select{
       <div class="section">
         <h3>家具清單</h3>
         <div class="list" id="furnitureList"></div>
+      </div>
+
+      <div class="section mobile-back-section bottom-return-section">
+        <button class="btn primary" id="backMainBtn" style="width:100%">← 返回主畫面</button>
       </div>
     </aside>
 
@@ -1718,7 +1804,6 @@ input,select{
 
         <div class="roomtype-head">
           <strong>房型設定</strong>
-          <button class="btn" id="closeRoomType">完成並返回主畫面</button>
         </div>
 
         <div class="roomtype-options">
@@ -1755,6 +1840,10 @@ input,select{
           </div>
           <div class="shape-msg" id="shapeMsg"></div>
         </div>
+
+        <div class="roomtype-bottom-return">
+          <button class="btn primary" id="closeRoomType">完成並返回主畫面</button>
+        </div>
       </div>
 
 
@@ -1764,7 +1853,7 @@ input,select{
         <button class="btn" id="rotateLeft">↶ -15°</button>
         <button class="btn" id="rotateRight">↷ +15°</button>
         <button class="btn" id="duplicate">複製</button>
-        <button class="btn" id="centerObj">置中</button>
+        <button class="btn" id="centerObj">刪除</button>
       </div>
 
       <div id="planView">
@@ -1779,7 +1868,7 @@ input,select{
       </div>
 
       <div class="help" id="helpText">
-        2D：拖曳家具移動；點家具後可用上方 ±15° 旋轉；長按家具約 0.7 秒可選擇刪除。手機可直接觸控拖曳。
+        2D：拖曳家具移動；點家具後可用上方 ±15° 旋轉；點選家具後可直接按「刪除」；長按家具 3 秒時刪除鍵會變成粉紅色提示。手機可直接觸控拖曳。
       </div>
       <div class="status" id="statusText">未選取家具</div>
     </main>
@@ -1807,7 +1896,8 @@ const presets = {
   table:{name:'餐桌',w:150,d:85,h:75,color:'#B89573',allowOverlap:false},
   desk:{name:'書桌',w:120,d:60,h:75,color:'#A98C70',allowOverlap:false},
   wardrobe:{name:'衣櫃',w:180,d:60,h:210,color:'#B7AA96',allowOverlap:false},
-  cabinet:{name:'櫃子',w:100,d:45,h:120,color:'#9D8D7E',allowOverlap:false}
+  cabinet:{name:'櫃子',w:100,d:45,h:120,color:'#9D8D7E',allowOverlap:false},
+  window:{name:'窗戶',w:120,d:12,h:120,color:'#A9C1C7',allowOverlap:true,isWindow:true,sillHeight:90}
 };
 
 const $ = id => document.getElementById(id);
@@ -1873,12 +1963,26 @@ function polygonsOverlap(a,b){
   }
   return true;
 }
+// v53：判斷兩物件在垂直方向是否真正相交。
+// 一般家具由地面起算；窗戶由 sillHeight（離地高度）起算。
+function verticalRangesOverlap(a,b){
+  const aBottom=a?.isWindow ? (+a.sillHeight||0) : 0;
+  const aTop=aBottom+(+a?.h||0);
+  const bBottom=b?.isWindow ? (+b.sillHeight||0) : 0;
+  const bTop=bBottom+(+b?.h||0);
+  return !(aTop<=bBottom+.5 || bTop<=aBottom+.5);
+}
+
 function furnitureWouldOverlap(it,x=it.x,y=it.y,rot=it.rot,w=it.w,d=it.d,allowOverlap=it.allowOverlap){
   if(allowOverlap) return false;
   const test=furnitureCorners(it,x,y,rot,w,d);
+  const probe={...it,x,y,rot,w,d};
   return state.items.some(other=>{
     if(other.id===it.id) return false;
-    if(other.allowOverlap) return false;
+    // 只要任一物件勾選「允許重疊」，就允許兩者重疊。
+    if(other.allowOverlap || allowOverlap) return false;
+    // 2D 投影重疊但高度沒有交集，也不視為碰撞。
+    if(!verticalRangesOverlap(probe,other)) return false;
     return polygonsOverlap(test,furnitureCorners(other));
   });
 }
@@ -1888,6 +1992,7 @@ function itemHasDisallowedOverlap(it){
   const test=furnitureCorners(it);
   return state.items.some(other=>{
     if(other.id===it.id || other.allowOverlap) return false;
+    if(!verticalRangesOverlap(it,other)) return false;
     return polygonsOverlap(test,furnitureCorners(other));
   });
 }
@@ -2115,7 +2220,9 @@ function addFurniture(data){
     w:+data.w||100, d:+data.d||60, h:+data.h||75,
     color:data.color||'#b88b5d',
     x:state.room.w/2, y:state.room.d/2, rot:0,
-    allowOverlap:data.allowOverlap===true
+    allowOverlap:data.allowOverlap===true,
+    isWindow:data.isWindow===true,
+    sillHeight:data.isWindow===true ? clamp(+data.sillHeight||90,0,500) : 0
   };
 
   const free=findFreePosition(item);
@@ -2426,11 +2533,17 @@ function render2D(){
     svg.appendChild(g);
   });
 
-  state.items.forEach(it=>{
+  // v54：一般家具先畫、窗戶最後畫；重疊時窗戶固定顯示在最上層
+  const renderItems=[
+    ...state.items.filter(it=>!it.isWindow),
+    ...state.items.filter(it=>it.isWindow)
+  ];
+  renderItems.forEach(it=>{
     const g=document.createElementNS(ns,'g');
     const cx=ox+it.x*scale, cy=oy+it.y*scale;
     g.setAttribute('transform',`translate(${cx} ${cy}) rotate(${it.rot})`);
     g.dataset.id=it.id;
+    if(it.isWindow) g.classList.add('window-item');
 
     const overlapWarning=itemHasDisallowedOverlap(it);
     if(overlapWarning){
@@ -2488,6 +2601,7 @@ function render2D(){
     g.addEventListener('pointerdown', e=>startDrag(e,it.id));
     g.addEventListener('click',()=>{state.selected=it.id; renderAll();});
     svg.appendChild(g);
+
   });
   renderSelectedDistances();
 }
@@ -2614,85 +2728,55 @@ svg.addEventListener('pointermove',e=>{
   render2D(); renderList(); syncEditor(); updateStatus();
 });
 
-// v47：2D 家具長按約 0.7 秒，可選擇刪除；正常拖曳不會誤觸
-let furnitureLongPress=null;
 
+// v48：長按家具 3 秒後顯示紅色 X；點 X 刪除
+let furnitureLongPressTimer=null;
+let furnitureLongPressInfo=null;
+let deleteXItemId=null;
+
+function clearFurnitureLongPress(){
+  if(furnitureLongPressTimer) clearTimeout(furnitureLongPressTimer);
+  furnitureLongPressTimer=null;
+  furnitureLongPressInfo=null;
+}
+function armFurnitureDelete(id){
+  deleteXItemId=id;
+  state.selected=id;
+  const btn=$('centerObj');
+  if(btn)btn.classList.add('delete-armed');
+  renderAll();
+}
 svg.addEventListener('pointerdown',e=>{
-  const target=e.target?.closest?.('g[data-id]');
-  if(!target) return;
-
-  const id=target.dataset.id;
-  if(!id || !state.items.some(x=>String(x.id)===String(id))) return;
-
-  furnitureLongPress={
-    id,
-    pid:e.pointerId,
-    x:e.clientX,
-    y:e.clientY,
-    moved:false,
-    target,
-    timer:null
-  };
-
-  furnitureLongPress.timer=setTimeout(()=>{
-    const lp=furnitureLongPress;
-    if(!lp || lp.moved || lp.pid!==e.pointerId) return;
-
-    const item=state.items.find(x=>String(x.id)===String(lp.id));
-    if(!item) return;
-
-    // 長按成立後停止本次拖曳，避免確認視窗後家具跟著移動
-    drag=null;
-    lp.target?.classList?.add('longpress-delete-hint');
-
-    const ok=confirm(`要刪除「${item.name}」嗎？`);
-    lp.target?.classList?.remove('longpress-delete-hint');
-
-    if(ok){
-      state.selected=item.id;
-
-      // 沿用原有刪除流程，並讓既有歷史紀錄機制可記錄這一步
-      const delBtn=$('deleteSelected');
-      if(delBtn){
-        delBtn.disabled=false;
-        delBtn.click();
-      }else{
-        state.items=state.items.filter(x=>x.id!==item.id);
-        state.selected=state.items.at(-1)?.id||null;
-        renderAll();
-      }
-
-      $('helpText').textContent=`已刪除家具：${item.name}`;
-    }else{
+  if(e.target?.closest?.('.furniture-delete-x')) return;
+  const group=e.target?.closest?.('g[data-id]');
+  if(!group){
+    if(deleteXItemId!==null){
+      deleteXItemId=null;
+      $('centerObj')?.classList.remove('delete-armed');
       renderAll();
     }
-
-    furnitureLongPress=null;
-  },700);
-},true);
-
-svg.addEventListener('pointermove',e=>{
-  const lp=furnitureLongPress;
-  if(!lp || lp.pid!==e.pointerId) return;
-
-  const moved=Math.hypot(e.clientX-lp.x,e.clientY-lp.y);
-  if(moved>10){
-    lp.moved=true;
-    clearTimeout(lp.timer);
-    furnitureLongPress=null;
+    return;
   }
+  const item=state.items.find(x=>String(x.id)===String(group.dataset.id));
+  if(!item)return;
+  clearFurnitureLongPress();
+  furnitureLongPressInfo={id:item.id,pid:e.pointerId,x:e.clientX,y:e.clientY};
+  furnitureLongPressTimer=setTimeout(()=>{
+    const lp=furnitureLongPressInfo;
+    if(!lp||lp.pid!==e.pointerId)return;
+    drag=null;
+    armFurnitureDelete(lp.id);
+    try{if(navigator.vibrate)navigator.vibrate(45)}catch(err){}
+    clearFurnitureLongPress();
+  },3000);
 },true);
-
-function cancelFurnitureLongPress(e){
-  const lp=furnitureLongPress;
-  if(!lp) return;
-  if(e && lp.pid!==e.pointerId) return;
-  clearTimeout(lp.timer);
-  lp.target?.classList?.remove('longpress-delete-hint');
-  furnitureLongPress=null;
-}
-svg.addEventListener('pointerup',cancelFurnitureLongPress,true);
-svg.addEventListener('pointercancel',cancelFurnitureLongPress,true);
+svg.addEventListener('pointermove',e=>{
+  const lp=furnitureLongPressInfo;
+  if(!lp||lp.pid!==e.pointerId)return;
+  if(Math.hypot(e.clientX-lp.x,e.clientY-lp.y)>12)clearFurnitureLongPress();
+},true);
+svg.addEventListener('pointerup',clearFurnitureLongPress,true);
+svg.addEventListener('pointercancel',clearFurnitureLongPress,true);
 
 function endDrag(e){
   // 先保留這次被拖曳的家具，放手後才進行自動避讓。
@@ -2757,18 +2841,36 @@ function syncEditor(){
   ids.forEach(id=>$(id).disabled=!it);
   $('eAllowOverlap').disabled=!it;
   $('updateSelected').disabled=!it; $('deleteSelected').disabled=!it;
+
+  const sillField=$('windowSillField');
+  const sillInput=$('eSillH');
+
   if(!it){
     ids.forEach(id=>$(id).value='');
     $('eAllowOverlap').checked=false;
+    if(sillField)sillField.style.display='none';
+    if(sillInput){sillInput.value='';sillInput.disabled=true;}
     return;
   }
+
   $('eName').value=it.name; $('eW').value=it.w; $('eD').value=it.d; $('eH').value=it.h;
   $('eAllowOverlap').checked=it.allowOverlap===true;
+
+  if(it.isWindow){
+    if(sillField)sillField.style.display='';
+    if(sillInput){
+      sillInput.disabled=false;
+      sillInput.value=Number.isFinite(+it.sillHeight)?Math.round(+it.sillHeight):90;
+    }
+  }else{
+    if(sillField)sillField.style.display='none';
+    if(sillInput){sillInput.value='';sillInput.disabled=true;}
+  }
 }
 
 function updateStatus(){
   const it=selectedItem();
-  $('statusText').textContent=it?`${it.name}｜${it.w}×${it.d}×${it.h} cm｜X ${Math.round(it.x)} / Y ${Math.round(it.y)}｜${Math.round(it.rot)}°${itemHasDisallowedOverlap(it)?'｜⚠ 重疊中':''}`:'未選取家具';
+  $('statusText').textContent=it?`${it.name}｜${it.w}×${it.d}×${it.h} cm${it.isWindow?`｜離地 ${Math.round(+it.sillHeight||0)} cm`:''}｜X ${Math.round(it.x)} / Y ${Math.round(it.y)}｜${Math.round(it.rot)}°${itemHasDisallowedOverlap(it)?'｜⚠ 重疊中':''}`:'未選取家具';
 }
 
 function renderAll(){
@@ -2835,6 +2937,14 @@ $('roomTypeApplyRoom').addEventListener('click',()=>{
   renderAll();
 });
 
+// v53：重疊勾選立即生效，尤其窗戶可直接拖到其他家具上方/重疊位置
+$('eAllowOverlap').addEventListener('change',()=>{
+  const it=selectedItem();
+  if(!it)return;
+  it.allowOverlap=$('eAllowOverlap').checked;
+  renderAll();
+});
+
 $('updateSelected').addEventListener('click',()=>{
   const it=selectedItem(); if(!it) return;
 
@@ -2853,6 +2963,10 @@ $('updateSelected').addEventListener('click',()=>{
   it.name=newName;
   it.w=newW; it.d=newD; it.h=newH;
   it.allowOverlap=newAllow;
+  if(it.isWindow){
+    it.sillHeight=clamp(+$('eSillH').value||0,0,Math.max(0,state.room.h-it.h));
+    $('eSillH').value=Math.round(it.sillHeight);
+  }
   renderAll();
 });
 $('deleteSelected').addEventListener('click',()=>{
@@ -2892,10 +3006,34 @@ $('duplicate').addEventListener('click',()=>{
   state.items.push(n); state.selected=n.id; renderAll();
 });
 $('centerObj').addEventListener('click',()=>{
-  const it=selectedItem(); if(!it)return;
-  it.x=state.room.w/2;
-  it.y=state.room.d/2;
+  // v50：一般點選家具後即可直接按「刪除」；長按 3 秒只負責把刪除鍵標成粉紅色提示
+  let target=null;
+
+  if(deleteXItemId!==null){
+    target=state.items.find(x=>String(x.id)===String(deleteXItemId));
+  }
+  if(!target){
+    target=selectedItem();
+  }
+
+  if(!target){
+    $('helpText').textContent='請先點選要刪除的家具。';
+    return;
+  }
+
+  const targetId=target.id;
+  const name=target.name;
+  state.items=state.items.filter(x=>String(x.id)!==String(targetId));
+
+  if(String(state.selected)===String(targetId)){
+    state.selected=null;
+  }
+
+  deleteXItemId=null;
+  $('centerObj').classList.remove('delete-armed');
+  $('helpText').textContent=`已刪除家具：${name}`;
   renderAll();
+  syncEditor();
 });
 
 $('saveBtn').addEventListener('click',()=>{
@@ -3186,7 +3324,30 @@ $('deleteDoor').addEventListener('click',()=>{
   });
 });
 
-$('panelBtn').addEventListener('click',()=>sidebar.classList.toggle('open'));
+// v58：進入家具前，必須先完成至少一扇房門設定。
+// 若尚未選擇房門，直接開啟「房型」面板並定位到房門設定區。
+$('panelBtn').addEventListener('click',()=>{
+  const hasDoor=Array.isArray(state.doors) && state.doors.length>0;
+  if(!hasDoor){
+    sidebar.classList.remove('open');
+    $('roomTypePanel').classList.add('open');
+    refreshRequiredDoorState();
+
+    // 先顯示提醒，再自動將房門欄位帶到畫面中央。
+    alert('請先完成「房門」設定並新增至少一扇房門，再進入家具配置。');
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        const doorPanel=$('doorPanel');
+        doorPanel?.scrollIntoView({behavior:'smooth',block:'start'});
+        $('doorW')?.focus({preventScroll:true});
+        doorPanel?.classList.add('door-attention');
+        setTimeout(()=>doorPanel?.classList.remove('door-attention'),1800);
+      });
+    });
+    return;
+  }
+  sidebar.classList.toggle('open');
+});
 $('backMainBtn').addEventListener('click',()=>{
   sidebar.classList.remove('open');
   requestAnimationFrame(()=>requestAnimationFrame(render2D));
@@ -3264,7 +3425,7 @@ async function init3D(){
   const resize=()=>{
     const r=$('view3d').getBoundingClientRect();
     if(!r.width||!r.height)return;
-    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const dpr=Math.min(window.devicePixelRatio||1,2.5);
     canvas.width=Math.max(1,Math.round(r.width*dpr));
     canvas.height=Math.max(1,Math.round(r.height*dpr));
     canvas.style.width=r.width+'px';
@@ -3389,7 +3550,8 @@ function project3(p,basis){
   const y=v[0]*basis.u[0]+v[1]*basis.u[1]+v[2]*basis.u[2];
   const z=v[0]*basis.f[0]+v[1]*basis.f[1]+v[2]*basis.f[2];
 
-  if(z<=1)return null;
+  // v55：縮小 near-plane，避免旋轉視角時面片因接近相機裁切面而整片消失
+  if(z<=0.02)return null;
   const w=three.canvas.width/three.dpr,h=three.canvas.height/three.dpr;
   const focal=Math.min(w,h)*.95;
   return [w/2+x*focal/z,h/2-y*focal/z,z];
@@ -3407,23 +3569,23 @@ function faceNormal(a,b,c){
   return n.map(x=>x/l);
 }
 
-function addFace(faces,verts,color,alpha=1,stroke='rgba(60,66,65,.32)'){
+function addFace(faces,verts,color,alpha=1,stroke='rgba(60,66,65,.32)',material='matte'){
   if(verts.length<3)return;
   const center=verts.reduce((a,p)=>[a[0]+p[0],a[1]+p[1],a[2]+p[2]],[0,0,0]).map(v=>v/verts.length);
-  faces.push({verts,color,alpha,stroke,center});
+  faces.push({verts,color,alpha,stroke,center,material});
 }
 
-function addBoxFaces(faces,cx,cy,z0,w,d,h,rot,color,alpha=1){
+function addBoxFaces(faces,cx,cy,z0,w,d,h,rot,color,alpha=1,material='matte'){
   const a=(rot||0)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);
   const raw=[[-w/2,-d/2],[w/2,-d/2],[w/2,d/2],[-w/2,d/2]];
   const p=raw.map(([x,y])=>[cx+x*c-y*s,cy+x*s+y*c]);
   const b=p.map(q=>[q[0],q[1],z0]);
   const t=p.map(q=>[q[0],q[1],z0+h]);
-  addFace(faces,[t[0],t[1],t[2],t[3]],color,alpha);
-  addFace(faces,[b[0],b[1],t[1],t[0]],color,alpha);
-  addFace(faces,[b[1],b[2],t[2],t[1]],color,alpha);
-  addFace(faces,[b[2],b[3],t[3],t[2]],color,alpha);
-  addFace(faces,[b[3],b[0],t[0],t[3]],color,alpha);
+  addFace(faces,[t[0],t[1],t[2],t[3]],color,alpha,'rgba(50,55,54,.24)',material);
+  addFace(faces,[b[0],b[1],t[1],t[0]],color,alpha,'rgba(50,55,54,.24)',material);
+  addFace(faces,[b[1],b[2],t[2],t[1]],color,alpha,'rgba(50,55,54,.24)',material);
+  addFace(faces,[b[2],b[3],t[3],t[2]],color,alpha,'rgba(50,55,54,.24)',material);
+  addFace(faces,[b[3],b[0],t[0],t[3]],color,alpha,'rgba(50,55,54,.24)',material);
 }
 
 function addWallSegment(faces,a,b,height,thickness,color){
@@ -3433,10 +3595,10 @@ function addWallSegment(faces,a,b,height,thickness,color){
   const p3=[b[0]-nx,b[1]-ny], p4=[a[0]-nx,a[1]-ny];
   const bot=[p1,p2,p3,p4].map(p=>[p[0],p[1],0]);
   const top=[p1,p2,p3,p4].map(p=>[p[0],p[1],height]);
-  addFace(faces,[top[0],top[1],top[2],top[3]],color,.94);
-  addFace(faces,[bot[0],bot[1],top[1],top[0]],color,.94);
-  addFace(faces,[bot[1],bot[2],top[2],top[1]],color,.94);
-  addFace(faces,[bot[2],bot[3],top[3],top[2]],color,.94);
+  addFace(faces,[top[0],top[1],top[2],top[3]],color,.42,'rgba(90,82,74,.18)','wall');
+  addFace(faces,[bot[0],bot[1],top[1],top[0]],color,.38,'rgba(90,82,74,.16)','wall');
+  addFace(faces,[bot[1],bot[2],top[2],top[1]],color,.38,'rgba(90,82,74,.16)','wall');
+  addFace(faces,[bot[2],bot[3],top[3],top[2]],color,.38,'rgba(90,82,74,.16)','wall');
 }
 
 function renderOffline3D(){
@@ -3448,11 +3610,19 @@ function renderOffline3D(){
   if(w<=1||h<=1)return;
 
   ctx.setTransform(dpr,0,0,dpr,0,0);
+  // v55：較接近室內寫真的暖灰背景與柔和光暈
   const bg=ctx.createLinearGradient(0,0,0,h);
-  bg.addColorStop(0,'#f7f4ef');
-  bg.addColorStop(.52,'#ddd4cb');
-  bg.addColorStop(1,'#bdb1a6');
+  bg.addColorStop(0,'#f8f6f2');
+  bg.addColorStop(.48,'#e8e1d9');
+  bg.addColorStop(1,'#c9bdb1');
   ctx.fillStyle=bg;
+  ctx.fillRect(0,0,w,h);
+
+  const glow=ctx.createRadialGradient(w*.28,h*.18,10,w*.28,h*.18,Math.max(w,h)*.72);
+  glow.addColorStop(0,'rgba(255,255,255,.70)');
+  glow.addColorStop(.45,'rgba(255,255,255,.16)');
+  glow.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=glow;
   ctx.fillRect(0,0,w,h);
 
   const faces=[];
@@ -3463,7 +3633,7 @@ function renderOffline3D(){
   const floorPts=(state.room.type==='custom' && state.room.points?.length>=3)
     ? state.room.points.map(([x,y])=>[x+ox,y+oy,0])
     : [[ox,oy,0],[ox+W,oy,0],[ox+W,oy+D,0],[ox,oy+D,0]];
-  addFace(faces,floorPts,'#c7ad92',1,'rgba(70,58,48,.48)');
+  addFace(faces,floorPts,'#c7ad92',1,'rgba(70,58,48,.30)','floor');
 
   // Walls: draw every wall, but use a low alpha so the room remains readable.
   const roomPts=(state.room.type==='custom' && state.room.points?.length>=3)
@@ -3478,10 +3648,11 @@ function renderOffline3D(){
     const overlapAlpha=itemHasDisallowedOverlap(it)?0.52:1;
     addBoxFaces(
       faces,
-      it.x+ox,it.y+oy,0,
+      it.x+ox,it.y+oy,(it.isWindow ? (+it.sillHeight||0) : 0),
       it.w,it.d,it.h,it.rot,
       it.color||'#B89573',
-      overlapAlpha
+      it.isWindow ? Math.min(.72,overlapAlpha) : overlapAlpha,
+      it.isWindow ? 'glass' : 'furniture'
     );
   });
 
@@ -3493,18 +3664,48 @@ function renderOffline3D(){
       p.x+ox,p.y+oy,0,
       door.w,Math.max(6,door.tickness||10),door.h,
       p.angle*180/Math.PI,
-      '#9B8C7D'
+      '#9B8C7D',
+      1,
+      'wood'
     );
   });
 
   const basis=cameraBasis();
+
+  // 家具接地陰影：提升立體感；窗戶依離地高度降低陰影強度。
+  ctx.save();
+  for(const it of state.items){
+    const z=it.isWindow?(+it.sillHeight||0):0;
+    const p=project3([it.x+ox,it.y+oy,z+.2],basis);
+    if(!p)continue;
+    const edge=project3([it.x+ox+Math.max(10,it.w*.42),it.y+oy,z+.2],basis);
+    const rr=edge?Math.max(5,Math.min(70,Math.abs(edge[0]-p[0]))):18;
+    const sy=Math.max(3,rr*.28);
+    const grd=ctx.createRadialGradient(p[0],p[1],1,p[0],p[1],rr);
+    grd.addColorStop(0,it.isWindow?'rgba(45,55,55,.05)':'rgba(45,38,34,.22)');
+    grd.addColorStop(1,'rgba(45,38,34,0)');
+    ctx.save();
+    ctx.translate(p[0],p[1]);
+    ctx.scale(1,sy/rr);
+    ctx.fillStyle=grd;
+    ctx.beginPath();
+    ctx.arc(0,0,rr,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
 
   // Painter sort by view depth of face center.
   faces.forEach(face=>{
     const pc=project3(face.center,basis);
     face.depth=pc?pc[2]:-Infinity;
   });
-  faces.sort((a,b)=>b.depth-a.depth);
+  faces.sort((a,b)=>{
+    const dz=b.depth-a.depth;
+    if(Math.abs(dz)>.35)return dz;
+    const pri=m=>m==='wall'?0:(m==='floor'?1:(m==='glass'?3:2));
+    return pri(a.material)-pri(b.material);
+  });
 
   // Simple directional lighting.
   const light=[-.45,-.35,.82];
@@ -3526,11 +3727,37 @@ function renderOffline3D(){
     ctx.moveTo(pts[0][0],pts[0][1]);
     for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
     ctx.closePath();
+
+    // 寫真感：不同材質使用不同反射/明暗。
+    let localFactor=factor;
+    if(face.material==='floor') localFactor=.88+diffuse*.18;
+    if(face.material==='wall') localFactor=.96+diffuse*.08;
+    if(face.material==='glass') localFactor=1.05+diffuse*.18;
+
     ctx.globalAlpha=face.alpha;
-    ctx.fillStyle=shadeColor(face.color,factor);
+    ctx.fillStyle=shadeColor(face.color,localFactor);
     ctx.fill();
+
+    if(face.material==='glass'){
+      const minX=Math.min(...pts.map(p=>p[0])), maxX=Math.max(...pts.map(p=>p[0]));
+      const minY=Math.min(...pts.map(p=>p[1])), maxY=Math.max(...pts.map(p=>p[1]));
+      const glass=ctx.createLinearGradient(minX,minY,maxX,maxY);
+      glass.addColorStop(0,'rgba(255,255,255,.48)');
+      glass.addColorStop(.38,'rgba(215,239,244,.16)');
+      glass.addColorStop(.62,'rgba(255,255,255,.34)');
+      glass.addColorStop(1,'rgba(126,167,177,.10)');
+      ctx.fillStyle=glass;
+      ctx.fill();
+    }else if(face.material==='furniture' || face.material==='wood'){
+      // 柔和高光，讓家具不再像單純色塊。
+      ctx.globalAlpha=Math.min(.16,face.alpha*.16);
+      ctx.fillStyle='rgba(255,255,255,.55)';
+      ctx.fill();
+    }
+
+    ctx.globalAlpha=face.alpha;
     ctx.strokeStyle=face.stroke;
-    ctx.lineWidth=1;
+    ctx.lineWidth=face.material==='glass'?1.35:.85;
     ctx.stroke();
   }
   ctx.globalAlpha=1;
@@ -3548,11 +3775,12 @@ function renderOffline3D(){
     if(a&&b){ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();}
   }
 
-  // Small offline indicator.
-  ctx.fillStyle='rgba(62,73,72,.78)';
+  // 低調操作提示
+  ctx.globalAlpha=1;
+  ctx.fillStyle='rgba(55,60,59,.58)';
   ctx.font='600 12px system-ui,-apple-system,sans-serif';
   ctx.textAlign='right';
-  ctx.fillText('3D OFFLINE',w-12,h-14);
+  ctx.fillText('拖曳旋轉視角 · 雙指縮放',w-12,h-14);
 }
 
 function update3D(){
@@ -3586,7 +3814,7 @@ requestAnimationFrame(()=>{
   ['#panelBtn','打開家具選單','按「家具」開啟快速新增家具。'],
   ['#sidebar','新增家具','可加入床、沙發、餐桌、書桌、衣櫃、櫃子，也可自訂尺寸。'],
   ['#planSvg','拖曳家具','直接拖曳家具到想要的位置；畫面會即時顯示與最近家具及牆面的距離（cm），放手後會依重疊規則自動整理。'],
-  ['.floating','旋轉與複製','可用 ±15° 旋轉，也可以複製或置中家具。'],
+  ['.floating','旋轉與複製','可用 ±15° 旋轉，也可以複製家具；長按家具 3 秒後可使用刪除鍵。'],
   ['#btn3d','查看 3D','按「3D 立體」檢查空間效果，可拖曳旋轉視角。'],
   ['#saveBtn','儲存配置','完成後按「儲存配置」，下次可用「載入配置」繼續編輯。']
  ];
@@ -3709,8 +3937,14 @@ requestAnimationFrame(()=>{
   });
   redoBtn?.addEventListener('click',e=>{e.stopPropagation();redo()});
 
-  // 點「家具」立即收起房型/尺寸/套用/房門，放大房間操作區
-  el('panelBtn')?.addEventListener('click',enterFurnitureMode);
+  // 點「家具」只有在房門已完成時才進入家具專注模式。
+  el('panelBtn')?.addEventListener('click',()=>{
+    if(Array.isArray(state.doors) && state.doors.length>0){
+      enterFurnitureMode();
+    }else{
+      leaveFurnitureMode();
+    }
+  });
 
   // 返回主畫面不恢復房型／尺寸控制；只有「上一步」才恢復
 
@@ -3731,7 +3965,7 @@ requestAnimationFrame(()=>{
     if(
       b.matches('[data-preset]') ||
       ['addCustom','updateSelected','deleteSelected','duplicateBtn',
-       'centerBtn','rotMinus','rotPlus'].includes(b.id)
+       'centerBtn','rotMinus','rotPlus','centerObj'].includes(b.id)
     ){
       setTimeout(saveStep,0);
     }
